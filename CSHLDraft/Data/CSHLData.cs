@@ -8,8 +8,10 @@ public interface ICSHLData
     Task<CSHLAccount?> GetAccountByEmailAsync(string email);
     Task UpdateRefreshTokenAsync(CSHLRefreshToken refreshToken);
     Task<CSHLRefreshToken?> GetRefreshTokenAsync(Guid localId, string provider);
-    
-    
+
+
+    Task<IEnumerable<CSHLDraft>> GetDraftsAsync();
+    Task<CSHLDraft?> CreateDraftAsync(CSHLDraft draft);
     Task<IEnumerable<CSHLDraftPick>> GetDraftPicksAsync(int draftId); 
     Task<CSHLDraftPick?> GetMostRecentDraftPickAsync(int draftId);
     Task<IEnumerable<CSHLTeam>> GetTeamsInDraftAsync(int draftId);
@@ -41,15 +43,27 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
     {
         string sql = @"SELECT *
                         FROM auth_token
-                        WHERE local_id = @local_id
-                            AND provider = @provider
+                        WHERE local_id = @LocalId
+                            AND provider = @Provider
                         ORDER BY created_at DESC
                         LIMIT 1";
         
         return await QueryDbSingleAsync<CSHLRefreshToken>(sql, new { LocalId = localId, Provider = provider });
     }        
     
-    
+    public async Task<IEnumerable<CSHLDraft>> GetDraftsAsync()
+    {
+        return await QueryDbAsync<CSHLDraft>("select * from draft");
+    }
+
+    public async Task<CSHLDraft?> CreateDraftAsync(CSHLDraft draft)
+    {
+        string sql = @"INSERT INTO draft(snake, name)
+                                VALUES (@Snake, @Name)
+                        RETURNING *";
+        return await QueryDbSingleAsync<CSHLDraft>(sql, draft);
+    }
+
     public async Task<IEnumerable<CSHLDraftPick>> GetDraftPicksAsync(int draftId)
     {
         return [];

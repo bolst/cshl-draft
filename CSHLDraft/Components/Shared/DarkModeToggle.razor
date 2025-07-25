@@ -3,16 +3,16 @@
 @if (_visible)
 {
     <MudToggleIconButton 
-        Toggled="IsDarkMode"
-        ToggledChanged="OnDarkModeToggled"
-        Icon="@Icons.Material.Filled.LightMode" 
-        Color="Color.Tertiary"
-        ToggledIcon="@Icons.Material.Filled.DarkMode"
-        ToggledColor="Color.Tertiary"
-        Size="Size.Small" />
+    Toggled="IsDarkMode"
+    ToggledChanged="OnDarkModeToggled"
+    Icon="@Icons.Material.Filled.LightMode" 
+    Color="LightColor"
+    ToggledIcon="@Icons.Material.Filled.DarkMode"
+    ToggledColor="DarkColor"
+    Size="Size" />
 }
-    
-    
+
+
 @code {
 
     [Parameter] 
@@ -20,6 +20,15 @@
 
     [Parameter] 
     public EventCallback<bool> IsDarkModeChanged { get; set; }
+
+    [Parameter]
+    public Size Size { get; set; } = Size.Medium;
+
+    [Parameter]
+    public Color LightColor { get; set; } = Color.Inherit;
+
+    [Parameter]
+    public Color DarkColor { get; set; } = Color.Inherit;
 
     private bool _visible;
 

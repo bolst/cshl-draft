@@ -1,0 +1,30 @@
+﻿@namespace CSHLDraft.Components.Shared
+
+@inject Data.CustomAuthenticationStateProvider CustomAuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<AuthorizeView>
+    <Authorized>
+        <MudText Typo="Typo.caption">Welcome back, @context.User.Identity?.Name</MudText>
+    </Authorized>
+</AuthorizeView>
+
+<AuthorizeView>
+    <Authorized>
+        <MudButton Class="ml-2" OnClick="LogOutClicked" Color="Color.Inherit">Log Out</MudButton>
+    </Authorized>
+    <NotAuthorized>
+        <MudIconButton Icon="@Icons.Material.Filled.Login" Href="login" Color="Color.Inherit" />
+    </NotAuthorized>
+</AuthorizeView>
+
+
+
+@code {
+
+    private async Task LogOutClicked()
+    {
+        await CustomAuthenticationStateProvider.LogoutAsync();
+        Navigation.NavigateTo("/", true);
+    }
+}

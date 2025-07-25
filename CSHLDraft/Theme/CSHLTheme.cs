@@ -4,11 +4,12 @@ namespace CSHLDraft;
 
 public class CSHLTheme
 {
-    public const string LogoUrl = "https://lh5.googleusercontent.com/aC0qeSXOO_Bsze5yY9s6F3x8Xf1EIOwf5DLqZEQONU14BRX1BWLJsKaAniR4Seh1AbscKmWBbZ7FCKnl0DV1zMu1ND1Q6aczNdM8qeUvdolyKdhLn5buCK_A9w=w16383";
+    public const string LogoUrl = "https://ffcghkodqzdpgfmzrmci.supabase.co/storage/v1/object/public/brand//cshl-logo.png";
 
     private readonly PaletteLight _defaultLight = new()
     {
-
+        Primary = "#bc1b20",
+        AppbarBackground = "#bc1b20",
     };
 
     private readonly PaletteDark _defaultDark = new()

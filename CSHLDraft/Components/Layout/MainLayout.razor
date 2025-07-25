@@ -17,14 +17,16 @@
         
         <MudSpacer />
 
-        <MudButtonGroup Class="mx-4" OverrideStyles="false">
-            <DarkModeToggle @bind-IsDarkMode="_darkMode"/>
-        </MudButtonGroup>
+        <div class="mx-4">
+            <DarkModeToggle @bind-IsDarkMode="_darkMode"  />
+        </div>
+
+        <LoginView />
         
         
     </MudAppBar>    
     <MudMainContent>
-        <div class="px-2">
+        <div class="px-2 pt-2">
             @Body
         </div>
     </MudMainContent>

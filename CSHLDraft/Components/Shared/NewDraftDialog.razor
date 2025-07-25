@@ -1,0 +1,70 @@
+﻿@inject Data.ICSHLData CSHLData
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">New Draft</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_draft.Name" Variant="Variant.Outlined" Label="Name" Margin="Margin.Dense" Required />
+        <MudSwitch @bind-Value="_draft.Snake" Color="Color.Primary" Label="Snake" />
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudText Typo="Typo.subtitle1" Color="Color.Error">@_errorMessage</MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Confirm" Color="Color.Success">Ok</MudButton>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+
+    private Data.CSHLDraft _draft = new();
+
+    private string _errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _draft = new();
+
+        var options = MudDialog.Options with
+        {
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            BackdropClick = false,
+        };
+
+        await MudDialog.SetOptionsAsync(options);
+    }
+
+    private async Task Confirm()
+    {
+        var status = await ValidateAsync();
+        if (!status) return;
+
+        MudDialog.Close(DialogResult.Ok(_draft));
+    }
+
+
+    private void Cancel() => MudDialog.Cancel();
+
+
+    private async Task<bool> ValidateAsync()
+    {
+        if (string.IsNullOrEmpty(_draft.Name))
+        {
+            _errorMessage = "Name cannot be empty";
+            return false;
+        }
+
+        return true;
+    }
+
+}
