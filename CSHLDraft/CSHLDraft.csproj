@@ -13,4 +13,13 @@
       </Content>
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+      <PackageReference Include="Dapper" Version="2.1.66" />
+      <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.7" />
+      <PackageReference Include="MudBlazor" Version="8.10.0" />
+      <PackageReference Include="Npgsql" Version="9.0.3" />
+      <PackageReference Include="Supabase" Version="1.1.1" />
+    </ItemGroup>
+
 </Project>

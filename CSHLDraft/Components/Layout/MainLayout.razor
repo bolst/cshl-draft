@@ -1,9 +1,52 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
+<MudThemeProvider Theme="_theme" @bind-IsDarkMode="_darkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar>
+        <MudLink Style="height: 64px" Href="https://www.chittlesports.ca/" Target="_blank" Underline="Underline.None">
+            <MudImage Class="cursor-pointer" Src="@CSHLTheme.LogoUrl" Height="64" />
+        </MudLink>
+        
+        <MudSpacer />
+        
+        @* <CurrentPickBanner /> *@
+        
+        <MudSpacer />
+
+        <MudButtonGroup Class="mx-4" OverrideStyles="false">
+            <DarkModeToggle @bind-IsDarkMode="_darkMode"/>
+        </MudButtonGroup>
+        
+        
+    </MudAppBar>    
+    <MudMainContent>
+        <div class="px-2">
+            @Body
+        </div>
+    </MudMainContent>
+</MudLayout>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+
+@code {
+
+    private MudTheme? _theme;
+
+    private bool _darkMode;
+
+    protected override void OnInitialized()
+    {
+        _theme = new CSHLTheme().Theme;
+    }
+
+
+}
