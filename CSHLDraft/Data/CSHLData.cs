@@ -12,9 +12,11 @@ public interface ICSHLData
 
     Task<IEnumerable<CSHLDraft>> GetDraftsAsync();
     Task<CSHLDraft?> CreateDraftAsync(CSHLDraft draft);
+    Task<CSHLDraft?> GetDraftByIdAsync(int draftId);
+    Task<IEnumerable<CSHLPlayer>> GetPlayersInDraftAsync(int draftId);
+    Task<IEnumerable<CSHLTeam>> GetTeamsInDraftAsync(int draftId);
     Task<IEnumerable<CSHLDraftPick>> GetDraftPicksAsync(int draftId); 
     Task<CSHLDraftPick?> GetMostRecentDraftPickAsync(int draftId);
-    Task<IEnumerable<CSHLTeam>> GetTeamsInDraftAsync(int draftId);
     Task<CSHLTeam?> GetTeamWithCurrentPickAsync(int draftId);
     Task DraftPlayerAsync(int draftId, CSHLPlayer player, CSHLTeam team, CSHLDraftPick pick);
     Task ResetDraftAsync(int draftId);
@@ -62,6 +64,16 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
                                 VALUES (@Snake, @Name)
                         RETURNING *";
         return await QueryDbSingleAsync<CSHLDraft>(sql, draft);
+    }
+
+    public async Task<CSHLDraft?> GetDraftByIdAsync(int draftId)
+    {
+        return await QueryDbSingleAsync<CSHLDraft>("select * from draft where id = @DraftId", new { DraftId = draftId });
+    }
+
+    public async Task<IEnumerable<CSHLPlayer>> GetPlayersInDraftAsync(int draftId)
+    {
+        return await QueryDbAsync<CSHLPlayer>("select p.* from player p inner join draft_player d on p.id = d.player_id and d.draft_id = @DraftId", new { DraftId = draftId });
     }
 
     public async Task<IEnumerable<CSHLDraftPick>> GetDraftPicksAsync(int draftId)

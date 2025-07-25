@@ -1,13 +1,97 @@
 ﻿@page "/draft/{DraftId:int}"
 
+@inject Data.ICSHLData CSHLData
+@inject NavigationManager Navigation
+
+
+@if (_loading)
+{
+    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="100px" Width="300px" />
+}
+else
+{
+    if (_draft is null)
+    {
+        <PageTitle>Draft</PageTitle>
+        <MudText Typo="Typo.h6">Couldn't find a draft with that ID :(</MudText>
+    }
+    else
+    {
+        <PageTitle>@_draft.Name.ToUpper()</PageTitle>
+        <MudText Class="mt-2" Typo="Typo.h4">@_draft.Name.ToUpper()</MudText>
+        <MudDivider />
+
+
+        <MudGrid>
+            <MudItem xs="4">
+                <MudDataGrid Items="_teams" Height="60vh" SortMode="SortMode.None" ShowColumnOptions="false" Filterable="false" Groupable="false" FixedHeader FixedFooter>
+                    <ToolBarContent>
+                        <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.FileUpload" Variant="Variant.Filled">Upload Teams</MudButton>
+                    </ToolBarContent>
+                    <Columns>
+                        <TemplateColumn>
+                            <CellTemplate>
+                                <MudImage Src="@context.Item.LogoUrl" Height="30" />
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn Property="x => x.Name" Title="Team" />
+                        <PropertyColumn Property="x => x.Order" Title="Pick" />
+                    </Columns>
+                </MudDataGrid>
+            </MudItem>
+            <MudItem xs="6">
+                <MudDataGrid Items="_players" Height="60vh" SortMode="SortMode.None" ShowColumnOptions="false" Filterable="false" Groupable="false" FixedHeader FixedFooter>
+                    <ToolBarContent>
+                        <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.FileUpload" Variant="Variant.Filled">Upload Players</MudButton>
+                    </ToolBarContent>
+                    <Columns>
+                        <TemplateColumn>
+                            <CellTemplate>
+                                <MudImage Src="@context.Item.HeadshotUrl" Height="30" />
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn Property="x => x.Name" Title="Player" />
+                        <PropertyColumn Property="x => x.Birthday" Title="DOB" />
+                        <PropertyColumn Property="x => x.Height" Title="Height" />
+                        <PropertyColumn Property="x => x.Weight" Title="Weight" />
+                    </Columns>
+                </MudDataGrid>
+            </MudItem>
+        </MudGrid>
 
 
 
+    }
+}
 
 
 @code {
 
     [Parameter]
     public required int DraftId { get; set; }
+
+    private bool _loading;
+
+    private Data.CSHLDraft? _draft;
+    private IEnumerable<Data.CSHLPlayer> _players = [];
+    private IEnumerable<Data.CSHLTeam> _teams = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_draft is not null && _draft.Id == DraftId) return;
+
+        _loading = true;
+        await InvokeAsync(StateHasChanged);
+
+        _draft = await CSHLData.GetDraftByIdAsync(DraftId);
+        if (_draft is not null)
+        {
+            _players = await CSHLData.GetPlayersInDraftAsync(DraftId);
+            _teams = await CSHLData.GetTeamsInDraftAsync(DraftId);
+        }
+
+        _loading = false;
+        await InvokeAsync(StateHasChanged);
+    }
 
 }
