@@ -46,6 +46,8 @@ builder.Services.AddScoped(provider =>
     });
 });
 
+builder.Services.AddScoped<CsvParser>();
+
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme,

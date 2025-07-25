@@ -1,6 +1,7 @@
 ﻿@page "/draft/{DraftId:int}"
 
 @inject Data.ICSHLData CSHLData
+@inject Data.CsvParser ExcelService
 @inject NavigationManager Navigation
 
 
@@ -26,7 +27,13 @@ else
             <MudItem xs="4">
                 <MudDataGrid Items="_teams" Height="60vh" SortMode="SortMode.None" ShowColumnOptions="false" Filterable="false" Groupable="false" FixedHeader FixedFooter>
                     <ToolBarContent>
-                        <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.FileUpload" Variant="Variant.Filled">Upload Teams</MudButton>
+                        <MudFileUpload T="IBrowserFile" FilesChanged="UploadTeamsFile" Accept="csv">
+                            <ActivatorContent>
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
+                                    Upload Teams CSV
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
                     </ToolBarContent>
                     <Columns>
                         <TemplateColumn>
@@ -35,14 +42,20 @@ else
                             </CellTemplate>
                         </TemplateColumn>
                         <PropertyColumn Property="x => x.Name" Title="Team" />
-                        <PropertyColumn Property="x => x.Order" Title="Pick" />
+                        <PropertyColumn Property="x => x.Pick" Title="Pick" />
                     </Columns>
                 </MudDataGrid>
             </MudItem>
             <MudItem xs="6">
                 <MudDataGrid Items="_players" Height="60vh" SortMode="SortMode.None" ShowColumnOptions="false" Filterable="false" Groupable="false" FixedHeader FixedFooter>
                     <ToolBarContent>
-                        <MudButton Color="Color.Secondary" StartIcon="@Icons.Material.Filled.FileUpload" Variant="Variant.Filled">Upload Players</MudButton>
+                        <MudFileUpload T="IBrowserFile" FilesChanged="UploadPlayersFile" Accept="csv">
+                            <ActivatorContent>
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
+                                    Upload Players CSV
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
                     </ToolBarContent>
                     <Columns>
                         <TemplateColumn>
@@ -71,6 +84,7 @@ else
     public required int DraftId { get; set; }
 
     private bool _loading;
+    private string _errorMessage = string.Empty;
 
     private Data.CSHLDraft? _draft;
     private IEnumerable<Data.CSHLPlayer> _players = [];
@@ -92,6 +106,34 @@ else
 
         _loading = false;
         await InvokeAsync(StateHasChanged);
+    }
+
+
+
+    private async Task UploadTeamsFile(IBrowserFile file)
+    {
+        var data = await ExcelService.ParseCsvAsync<Data.InputTeam>(file);
+
+        if (!data.Success)
+        {
+            _errorMessage = data.Message;
+            return;
+        }
+    }
+
+    private async Task UploadPlayersFile(IBrowserFile file)
+    {
+        var upload = await ExcelService.ParseCsvAsync<Data.InputPlayer>(file);
+
+        if (!upload.Success)
+        {
+            _errorMessage = upload.Message;
+            return;
+        }
+
+        await CSHLData.SetDraftPlayersAsync(DraftId, upload.Data);
+
+        _players = await CSHLData.GetPlayersInDraftAsync(DraftId);
     }
 
 }

@@ -1,3 +1,4 @@
+using Dapper;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace CSHLDraft.Data;
@@ -15,6 +16,8 @@ public interface ICSHLData
     Task<CSHLDraft?> GetDraftByIdAsync(int draftId);
     Task<IEnumerable<CSHLPlayer>> GetPlayersInDraftAsync(int draftId);
     Task<IEnumerable<CSHLTeam>> GetTeamsInDraftAsync(int draftId);
+    Task SetDraftPlayersAsync(int draftId, IEnumerable<InputPlayer> players);
+
     Task<IEnumerable<CSHLDraftPick>> GetDraftPicksAsync(int draftId); 
     Task<CSHLDraftPick?> GetMostRecentDraftPickAsync(int draftId);
     Task<CSHLTeam?> GetTeamWithCurrentPickAsync(int draftId);
@@ -73,7 +76,7 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
 
     public async Task<IEnumerable<CSHLPlayer>> GetPlayersInDraftAsync(int draftId)
     {
-        return await QueryDbAsync<CSHLPlayer>("select p.* from player p inner join draft_player d on p.id = d.player_id and d.draft_id = @DraftId", new { DraftId = draftId });
+        return await QueryDbAsync<CSHLPlayer>("select p.* from player p where p.draft_id = @DraftId", new { DraftId = draftId });
     }
 
     public async Task<IEnumerable<CSHLDraftPick>> GetDraftPicksAsync(int draftId)
@@ -90,7 +93,29 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
     {
         return [];
     }
-    
+
+
+    public async Task SetDraftPlayersAsync(int draftId, IEnumerable<InputPlayer> players)
+    {
+        await ExecuteTransactionAsync(async () =>
+        {
+            await ExecuteSqlAsync("delete from player where draft_id = @DraftId", new { DraftId = draftId });
+
+
+            string sql = @"INSERT INTO player(name, birthday, height, weight, headshoturl, draft_id)
+                        VALUES(@Name, @DOB, @Height, @Weight, @HeadshotURL, @DraftId)";
+            var parameters = players.Select(x =>
+            {
+                var parameter = new DynamicParameters(x);
+                parameter.Add("DraftId", draftId);
+                return parameter;
+            });
+            await ExecuteSqlAsync(sql, parameters);
+        });
+
+    }
+
+
     public async Task<CSHLTeam?> GetTeamWithCurrentPickAsync(int draftId)
     {
         return null;
