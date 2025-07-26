@@ -1,0 +1,48 @@
+
+<MudChip T="string" Size="@Size" Color="_color" Icon="@_icon" Variant="Variant.Text" Label="true">@_draftState.ToUpper()</MudChip>
+
+
+@code {
+
+    [Parameter, EditorRequired] 
+    public required string DraftState { get; set; }
+
+    [Parameter] 
+    public Size Size { get; set; } = Size.Medium;
+
+    private string _draftState = string.Empty;
+
+    private Color _color = Color.Default;
+    private string _icon = Icons.Material.Filled.Label;
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(_draftState) && _draftState == DraftState) return;
+
+        _draftState = DraftState;
+        switch (DraftState)
+        {
+            case Data.DraftState.Active:
+                _color = Color.Info;
+                _icon = Icons.Material.Filled.FeaturedPlayList;
+                break;            
+            case Data.DraftState.Inactive:
+                _color = Color.Warning;
+                _icon = Icons.Material.Filled.BlurOff;
+                break;            
+            case Data.DraftState.Complete:
+                _color = Color.Success;
+                _icon = Icons.Material.Filled.Check;
+                break;            
+            case Data.DraftState.Live:
+                _color = Color.Error;
+                _icon = Icons.Material.Filled.Circle;
+                break;
+            default:
+                _color = Color.Default;
+                _icon = Icons.Material.Filled.Label;
+                break;
+        }
+    }
+    
+}

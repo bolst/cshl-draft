@@ -1,267 +1,81 @@
-﻿@page "/draft/{DraftId:int}"
+@page "/draft/{DraftIdStr}"
+
+@attribute [Authorize]
+
+@inherits HubComponentBase
 
 @inject Data.ICSHLData CSHLData
-@inject Data.CsvParser ExcelService
 @inject NavigationManager Navigation
-@inject IDialogService DialogService
 
 
-@if (_loading)
-{
-    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="100px" Width="300px" />
-}
-else
-{
-    if (_draft is null)
-    {
-        <PageTitle>Draft</PageTitle>
-        <MudText Typo="Typo.h6">Couldn't find a draft with that ID :(</MudText>
-    }
-    else
-    {
-        <PageTitle>@_draft.Name.ToUpper()</PageTitle>
-        <MudText Class="mt-2" Typo="Typo.h4">@_draft.Name.ToUpper()</MudText>
-        <MudDivider />
+<PageTitle>Draft Tool</PageTitle>
 
-
-        <MudGrid>
-            <MudItem xs="4">
-                <MudDataGrid T="Data.CSHLTeam" Items="_teams" Height="60vh" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual" CommittedItemChanges="OnTeamUpdated" SortMode="SortMode.None" ReadOnly="false" ShowColumnOptions="false" Filterable="false" Groupable="false" FixedHeader FixedFooter>
-                    <ToolBarContent>
-                        <MudFileUpload T="IBrowserFile" FilesChanged="UploadTeamsFile" Accept="csv">
-                            <ActivatorContent>
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
-                                    Upload Teams
-                                </MudButton>
-                            </ActivatorContent>
-                        </MudFileUpload>
-                    </ToolBarContent>
-                    <Columns>
-                        <TemplateColumn>
-                            <CellTemplate>
-                                <MudImage Src="@context.Item.LogoUrl" Height="30" />
-                            </CellTemplate>
-                        </TemplateColumn>
-                        <PropertyColumn Property="x => x.Name" Title="Team" />
-                        <PropertyColumn Property="x => x.Pick" Title="Pick" />
-                        <TemplateColumn>
-                            <CellTemplate>
-                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
-                            </CellTemplate>
-                        </TemplateColumn>
-                        <TemplateColumn>
-                            <CellTemplate>
-                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" OnClick="_ => RemoveTeam(context.Item)" />
-                            </CellTemplate>
-                        </TemplateColumn>
-                    </Columns>
-                    <PagerContent>
-                        <MudButton Class="mud-elevation-2" OnClick="AddTeam" StartIcon="@Icons.Material.Filled.Add" Disabled="_loading" FullWidth>Add Team</MudButton>
-                    </PagerContent>
-                </MudDataGrid>
-            </MudItem>
-            <MudItem xs="6">
-                <MudDataGrid T="Data.CSHLPlayer" Items="_players" Height="60vh" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual" CommittedItemChanges="OnPlayerUpdated" SortMode="SortMode.None" ReadOnly="false" ShowColumnOptions="false" Filterable="false" Groupable="false" FixedHeader FixedFooter Dense>
-                    <ToolBarContent>
-                        <MudFileUpload T="IBrowserFile" FilesChanged="UploadPlayersFile" Accept="csv">
-                            <ActivatorContent>
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
-                                    Upload Players
-                                </MudButton>
-                            </ActivatorContent>
-                        </MudFileUpload>
-                    </ToolBarContent>
-                    <Columns>
-                        <TemplateColumn>
-                            <CellTemplate>
-                                <MudImage Src="@context.Item.HeadshotUrl" Height="30" />
-                            </CellTemplate>
-                        </TemplateColumn>
-                        <PropertyColumn Property="x => x.Name" Title="Player" />
-                        <PropertyColumn Property="@(x => x.Birthday.ToString("d"))" Title="DOB" />
-                        <PropertyColumn Property="x => x.Height" Title="Height" />
-                        <PropertyColumn Property="x => x.Weight" Title="Weight" />
-                        <TemplateColumn>
-                            <CellTemplate>
-                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
-                            </CellTemplate>
-                        </TemplateColumn>
-                        <TemplateColumn>
-                            <CellTemplate>
-                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" OnClick="_ => RemovePlayer(context.Item)" />
-                            </CellTemplate>
-                        </TemplateColumn>
-                    </Columns>
-                    <PagerContent>
-                        <MudButton Class="mud-elevation-2" OnClick="AddPlayer" StartIcon="@Icons.Material.Filled.Add" Disabled="_loading" FullWidth>Add Player</MudButton>
-                    </PagerContent>
-                </MudDataGrid>
-            </MudItem>
-            <MudItem xs="2">
-                <div class="d-flex align-start gap-3 flex-column pa-1">
-                    <MudSwitch T="bool" Label="Snake" Value="_draft.Snake" ValueChanged="OnSnakeChanged" Color="Color.Primary" Disabled="_loading" />
-                    <MudDatePicker Date="_draft.DTStart" DateChanged="OnDateChanged" Label="Date" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="_loading" Editable />
-                    <MudTimePicker Time="_draft.TimeStart" TimeChanged="OnTimeChanged" Label="Time" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="_loading" AmPm Editable />
-                </div>
-            </MudItem>
-        </MudGrid>
-
-
-
-    }
-}
+<MudGrid Spacing="2">
+    <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert>
+        <MudItem xs="3">
+            <MudPaper Width="100%" Height="90vh" Class="mud-theme-surface" Elevation="3">
+                @* <CurrentTeamDraftBoard /> *@
+                currnet team
+            </MudPaper>
+        </MudItem>
+    </MudHidden>
+    <MudItem xs="12" md="7">
+        <MudPaper Width="100%" Height="90vh" Class="mud-theme-surface" Elevation="3">
+            @* <PlayerTable Disabled="_disabled" /> *@
+            payer tabl
+        </MudPaper>
+    </MudItem>
+    <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert>
+        <MudItem xs="2">
+            <MudPaper Width="100%" Height="90vh" Class="mud-theme-surface" Elevation="3">
+                @* <DraftStatus /> *@
+                staus
+            </MudPaper>
+        </MudItem>
+    </MudHidden>
+</MudGrid>
 
 
 @code {
-
+    
     [Parameter]
-    public required int DraftId { get; set; }
+    public string? DraftIdStr { get; set; }
 
-    private bool _loading;
-    private string _errorMessage = string.Empty;
+    private Guid DraftId;
 
+    private bool _disabled;
     private Data.CSHLDraft? _draft;
-    private IEnumerable<Data.CSHLPlayer> _players = [];
-    private IEnumerable<Data.CSHLTeam> _teams = [];
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
-        if (_draft is not null && _draft.Id == DraftId) return;
+        if (string.IsNullOrEmpty(DraftIdStr) || !Guid.TryParse(DraftIdStr, out DraftId))
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
 
         await LoadDataAsync();
-    }
-
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (!firstRender) return;
+        await base.OnInitializedAsync();
     }
 
 
     private async Task LoadDataAsync()
     {
-        _loading = true;
-        await InvokeAsync(StateHasChanged);
-
         _draft = await CSHLData.GetDraftByIdAsync(DraftId);
-        if (_draft is not null)
-        {
-            _players = await CSHLData.GetPlayersInDraftAsync(DraftId);
-            _teams = await CSHLData.GetTeamsInDraftAsync(DraftId);
-        }
+        if (_draft is null) return;
 
-        _loading = false;
+        _disabled = _draft.State == Data.DraftState.Inactive;
         await InvokeAsync(StateHasChanged);
     }
 
 
-    private async Task OnPlayerUpdated(Data.CSHLPlayer player)
+    protected override void AddHubHandlers()
     {
-        await CSHLData.SetDraftPlayersAsync(DraftId, _players);
-        await LoadDataAsync();
-    }
-    
-    
-    private async Task OnTeamUpdated(Data.CSHLTeam team)
-    {
-        await CSHLData.SetDraftTeamsAsync(DraftId, _teams);
-        await LoadDataAsync();
-    }
-
-
-    private async Task OnSnakeChanged(bool value)
-    {
-        _draft.Snake = value;
-        await CSHLData.UpdateDraftAsync(_draft);
-    }
-
-    private async Task OnDateChanged(DateTime? value)
-    {
-        _draft.DTStart = value;
-        await CSHLData.UpdateDraftAsync(_draft);
-    }
-
-    private async Task OnTimeChanged(TimeSpan? value)
-    {
-        _draft.TimeStart = value;
-        await CSHLData.UpdateDraftAsync(_draft);
-    }
-    
-
-    private async Task AddPlayer()
-    {
-        _players = _players.Prepend(new()
+        Hub.On(Data.DraftHub.Events.OnDraftStateChange, async () =>
         {
-            Name = "New Player",
-            Birthday = DateTime.Now,
-            Height = "6'0",
-            Weight = "180 lb",
-            HeadshotUrl = "",
+            await LoadDataAsync();
+            await InvokeAsync(StateHasChanged);
         });
-        
-        await CSHLData.SetDraftPlayersAsync(DraftId, _players);
-    }
-
-
-    private async Task AddTeam()
-    {
-        var nextPick = _teams.Any() ? _teams.Max(x => x.Pick) + 1 : 1;
-        
-        _teams = _teams.Prepend(new()
-        {
-            Name = "New Team",
-            LogoUrl = "",
-            Pick = nextPick
-        });
-        
-        await CSHLData.SetDraftTeamsAsync(DraftId, _teams);
-    }
-
-
-    private async Task RemovePlayer(Data.CSHLPlayer player)
-    {
-        var confirm = await DialogService.ShowMessageBox("Confirm", $"Remove {player.Name}?",  yesText: "Yes", noText: "No");
-        if (!confirm.GetValueOrDefault()) return;
-        
-        _players = _players.Except([player]);
-        await CSHLData.SetDraftPlayersAsync(DraftId, _players);
-    }
-
-
-    private async Task RemoveTeam(Data.CSHLTeam team)
-    {
-        var confirm = await DialogService.ShowMessageBox("Confirm", $"Remove {team.Name}?",  yesText: "Yes", noText: "No");
-        if (!confirm.GetValueOrDefault()) return;
-        
-        _teams = _teams.Except([team]);
-        await CSHLData.SetDraftTeamsAsync(DraftId, _teams);
-    }
-
-
-    private async Task UploadTeamsFile(IBrowserFile file)
-    {
-        var data = await ExcelService.ParseCsvAsync<Data.InputTeam>(file);
-
-        if (!data.Success)
-        {
-            _errorMessage = data.Message;
-            return;
-        }
-    }
-
-    private async Task UploadPlayersFile(IBrowserFile file)
-    {
-        var upload = await ExcelService.ParseCsvAsync<Data.InputPlayer>(file);
-
-        if (!upload.Success)
-        {
-            _errorMessage = upload.Message;
-            return;
-        }
-
-        await CSHLData.SetDraftPlayersAsync(DraftId, upload.Data);
-
-        await LoadDataAsync();
     }
 
 }

@@ -7,4 +7,14 @@ public class InputPlayer
     public string Height { get; set; }
     public string Weight { get; set; }
     public string HeadshotURL { get; set; }
+
+    public CSHLPlayer ToCSHLPlayer() => new()
+    {
+        Id = Guid.NewGuid(),
+        Name = Name,
+        Birthday = Birthday,
+        Height = Height,
+        Weight = Weight,
+        HeadshotUrl = HeadshotURL,
+    };
 }

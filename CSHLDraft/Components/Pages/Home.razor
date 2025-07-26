@@ -17,10 +17,15 @@ else
     <MudStack Wrap="Wrap.Wrap" Spacing="3" AlignItems="AlignItems.Start" StretchItems="StretchItems.None" Row>
         @foreach(var draft in _drafts)
         {
-            <MudLink Underline="Underline.Hover" Href="@($"/draft/{draft.Id}")">
+            <MudLink Underline="Underline.Hover" Href="@($"/draft/config?draft={draft.Id}")">
                 <MudPaper Class="pa-3 d-flex flex-grow-1 flex-column gap-2" Height="150px" Width="200px">
                     <div class="flex-grow-1">
                         <MudText Typo="Typo.body1"><b>@draft.Name.ToUpper()</b></MudText>
+                        @if (draft.DTStart is not null)
+                        {
+                            <MudText Typo="Typo.subtitle1">@draft.DTStart.Value.ToString("f")</MudText>
+                        }
+                        <DraftStateChip DraftState="@draft.State" />
                     </div>
                 </MudPaper>
             </MudLink>

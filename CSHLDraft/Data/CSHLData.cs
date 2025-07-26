@@ -13,19 +13,19 @@ public interface ICSHLData
 
     Task<IEnumerable<CSHLDraft>> GetDraftsAsync();
     Task<CSHLDraft?> CreateDraftAsync(CSHLDraft draft);
-    Task<CSHLDraft?> GetDraftByIdAsync(int draftId);
+    Task<CSHLDraft?> GetDraftByIdAsync(Guid draftId);
     Task UpdateDraftAsync(CSHLDraft draft);
-    Task<IEnumerable<CSHLPlayer>> GetPlayersInDraftAsync(int draftId);
-    Task<IEnumerable<CSHLTeam>> GetTeamsInDraftAsync(int draftId);
-    Task SetDraftPlayersAsync(int draftId, IEnumerable<CSHLPlayer> players);
-    Task SetDraftPlayersAsync(int draftId, IEnumerable<InputPlayer> players);
-    Task SetDraftTeamsAsync(int draftId, IEnumerable<CSHLTeam> teams);
-    Task SetDraftTeamsAsync(int draftId, IEnumerable<InputTeam> teams);
-    Task<IEnumerable<CSHLDraftPick>> GetDraftPicksAsync(int draftId); 
-    Task<CSHLDraftPick?> GetMostRecentDraftPickAsync(int draftId);
-    Task<CSHLTeam?> GetTeamWithCurrentPickAsync(int draftId);
-    Task DraftPlayerAsync(int draftId, CSHLPlayer player, CSHLTeam team, CSHLDraftPick pick);
-    Task ResetDraftAsync(int draftId);
+    Task<IEnumerable<CSHLPlayer>> GetPlayersInDraftAsync(Guid draftId);
+    Task<IEnumerable<CSHLTeam>> GetTeamsInDraftAsync(Guid draftId);
+    Task SetDraftPlayersAsync(Guid draftId, IEnumerable<InputPlayer> players);
+    Task SetDraftPlayersAsync(Guid draftId, IEnumerable<CSHLPlayer> players);
+    Task SetDraftTeamsAsync(Guid draftId, IEnumerable<InputTeam> teams);
+    Task SetDraftTeamsAsync(Guid draftId, IEnumerable<CSHLTeam> teams);
+    Task<IEnumerable<CSHLDraftPick>> GetDraftPicksAsync(Guid draftId); 
+    Task<CSHLDraftPick?> GetMostRecentDraftPickAsync(Guid draftId);
+    Task<CSHLTeam?> GetTeamWithCurrentPickAsync(Guid draftId);
+    Task DraftPlayerAsync(Guid draftId, CSHLPlayer player, CSHLTeam team, CSHLDraftPick pick);
+    Task ResetDraftAsync(Guid draftId);
 }
 
 
@@ -72,7 +72,7 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
         return await QueryDbSingleAsync<CSHLDraft>(sql, draft);
     }
 
-    public async Task<CSHLDraft?> GetDraftByIdAsync(int draftId)
+    public async Task<CSHLDraft?> GetDraftByIdAsync(Guid draftId)
     {
         return await QueryDbSingleAsync<CSHLDraft>("select * from draft where id = @DraftId", new { DraftId = draftId });
     }
@@ -86,47 +86,38 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
                                         WHERE id = @Id", draft);
     }
 
-    public async Task<IEnumerable<CSHLPlayer>> GetPlayersInDraftAsync(int draftId)
+    public async Task<IEnumerable<CSHLPlayer>> GetPlayersInDraftAsync(Guid draftId)
     {
         return await QueryDbAsync<CSHLPlayer>("select p.* from player p where p.draft_id = @DraftId", new { DraftId = draftId });
     }
 
-    public async Task<IEnumerable<CSHLDraftPick>> GetDraftPicksAsync(int draftId)
+    public async Task<IEnumerable<CSHLDraftPick>> GetDraftPicksAsync(Guid draftId)
     {
         return [];
     }
     
-    public async Task<CSHLDraftPick?> GetMostRecentDraftPickAsync(int draftId)
+    public async Task<CSHLDraftPick?> GetMostRecentDraftPickAsync(Guid draftId)
     {
         return null;
     }
     
-    public async Task<IEnumerable<CSHLTeam>> GetTeamsInDraftAsync(int draftId)
+    public async Task<IEnumerable<CSHLTeam>> GetTeamsInDraftAsync(Guid draftId)
     {
         return await QueryDbAsync<CSHLTeam>("select * from team where draft_id = @DraftId", new { DraftId = draftId });
     }
 
 
-    public async Task SetDraftPlayersAsync(int draftId, IEnumerable<CSHLPlayer> players)
+    public async Task SetDraftPlayersAsync(Guid draftId, IEnumerable<InputPlayer> players)
     {
-        var inputPlayers = players.Select(x => new InputPlayer
-        {
-            Name = x.Name,
-            Birthday = x.Birthday,
-            Height = x.Height,
-            Weight = x.Weight,
-            HeadshotURL = x.HeadshotUrl
-        });
-
-        await SetDraftPlayersAsync(draftId, inputPlayers);
+        var cshlPlayers = players.Select(x => x.ToCSHLPlayer());
+        await SetDraftPlayersAsync(draftId, cshlPlayers);
     }
     
-    public async Task SetDraftPlayersAsync(int draftId, IEnumerable<InputPlayer> players)
+    public async Task SetDraftPlayersAsync(Guid draftId, IEnumerable<CSHLPlayer> players)
     {
         await ExecuteTransactionAsync(async () =>
         {
             await ExecuteSqlAsync("delete from player where draft_id = @DraftId", new { DraftId = draftId });
-
 
             string sql = @"INSERT INTO player(name, birthday, height, weight, headshoturl, draft_id)
                         VALUES(@Name, @Birthday, @Height, @Weight, @HeadshotURL, @DraftId)";
@@ -140,24 +131,17 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
         });
     }
 
-    public async Task SetDraftTeamsAsync(int draftId, IEnumerable<CSHLTeam> teams)
+    public async Task SetDraftTeamsAsync(Guid draftId, IEnumerable<InputTeam> teams)
     {
-        var inputTeams = teams.Select(x => new InputTeam
-        {
-            Name = x.Name,
-            Pick = x.Pick,
-            LogoUrl = x.LogoUrl,
-        });
-
+        var inputTeams = teams.Select(x => x.ToCSHLTeam());
         await SetDraftTeamsAsync(draftId, inputTeams);
     }
 
-    public async Task SetDraftTeamsAsync(int draftId, IEnumerable<InputTeam> teams)
+    public async Task SetDraftTeamsAsync(Guid draftId, IEnumerable<CSHLTeam> teams)
     {
         await ExecuteTransactionAsync(async () =>
         {
             await ExecuteSqlAsync("delete from team where draft_id = @DraftId", new { DraftId = draftId });
-
 
             string sql = @"INSERT INTO team(name, logourl, draft_id, pick)
                         VALUES(@Name, @LogoUrl, @DraftId, @Pick)";
@@ -172,17 +156,17 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
     }
 
 
-    public async Task<CSHLTeam?> GetTeamWithCurrentPickAsync(int draftId)
+    public async Task<CSHLTeam?> GetTeamWithCurrentPickAsync(Guid draftId)
     {
         return null;
     }
     
-    public async Task DraftPlayerAsync(int draftId, CSHLPlayer player, CSHLTeam team, CSHLDraftPick pick)
+    public async Task DraftPlayerAsync(Guid draftId, CSHLPlayer player, CSHLTeam team, CSHLDraftPick pick)
     {
         
     }
     
-    public async Task ResetDraftAsync(int draftId)
+    public async Task ResetDraftAsync(Guid draftId)
     {
         
     }

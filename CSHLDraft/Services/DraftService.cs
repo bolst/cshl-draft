@@ -14,7 +14,7 @@ public class DraftService
         _cshlData = cshlData;
     }
 
-    public async Task<(CSHLTeam, CSHLDraftPick)> GetTeamWithCurrentPick(int draftId)
+    public async Task<(CSHLTeam, CSHLDraftPick)> GetTeamWithCurrentPick(Guid draftId)
     {
         var currentPick = await _cshlData.GetMostRecentDraftPickAsync(draftId);
 
@@ -45,7 +45,7 @@ public class DraftService
         }
     }
 
-    public async Task DraftPlayerAsync(int draftId, CSHLPlayer player, HubConnection hub)
+    public async Task DraftPlayerAsync(Guid draftId, CSHLPlayer player, HubConnection hub)
     {
         var (team, pick) = await GetTeamWithCurrentPick(draftId);
         // Console.WriteLine($"{team.name} is drafting {player.name}");
@@ -57,17 +57,17 @@ public class DraftService
         await hub.SendAsync(nameof(DraftHub.PushDraftUpdate));
     }
 
-    public async Task<IEnumerable<CSHLTeam>> GetTeamsInDraftAsync(int draftId)
+    public async Task<IEnumerable<CSHLTeam>> GetTeamsInDraftAsync(Guid draftId)
     {
         return await _cshlData.GetTeamsInDraftAsync(draftId);
     }
 
-    public async Task<IEnumerable<CSHLDraftPick>> GetDraftedPlayersAsync(int draftId)
+    public async Task<IEnumerable<CSHLDraftPick>> GetDraftedPlayersAsync(Guid draftId)
     {
         return await _cshlData.GetDraftPicksAsync(draftId);
     }
 
-    public async Task ResetDraftAsync(int draftId, HubConnection hub)
+    public async Task ResetDraftAsync(Guid draftId, HubConnection hub)
     {
         await _cshlData.ResetDraftAsync(draftId);
         
