@@ -25,12 +25,12 @@ else
 
         <MudGrid>
             <MudItem xs="4">
-                <MudDataGrid Items="_teams" Height="60vh" SortMode="SortMode.None" ShowColumnOptions="false" Filterable="false" Groupable="false" FixedHeader FixedFooter>
+                <MudDataGrid T="Data.CSHLTeam" Items="_teams" Height="60vh" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual" CommittedItemChanges="OnTeamUpdated" SortMode="SortMode.None" ReadOnly="false" ShowColumnOptions="false" Filterable="false" Groupable="false" FixedHeader FixedFooter>
                     <ToolBarContent>
                         <MudFileUpload T="IBrowserFile" FilesChanged="UploadTeamsFile" Accept="csv">
                             <ActivatorContent>
                                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
-                                    Upload Teams CSV
+                                    Upload Teams
                                 </MudButton>
                             </ActivatorContent>
                         </MudFileUpload>
@@ -43,16 +43,24 @@ else
                         </TemplateColumn>
                         <PropertyColumn Property="x => x.Name" Title="Team" />
                         <PropertyColumn Property="x => x.Pick" Title="Pick" />
+                        <TemplateColumn>
+                            <CellTemplate>
+                                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
+                            </CellTemplate>
+                        </TemplateColumn>
                     </Columns>
+                    <PagerContent>
+                        <MudButton OnClick="AddTeam" StartIcon="@Icons.Material.Filled.Add" FullWidth>Add Team</MudButton>
+                    </PagerContent>
                 </MudDataGrid>
             </MudItem>
             <MudItem xs="6">
-                <MudDataGrid Items="_players" Height="60vh" SortMode="SortMode.None" ShowColumnOptions="false" Filterable="false" Groupable="false" FixedHeader FixedFooter>
+                <MudDataGrid T="Data.CSHLPlayer" Items="_players" Height="60vh" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual" CommittedItemChanges="OnPlayerUpdated" SortMode="SortMode.None" ReadOnly="false" ShowColumnOptions="false" Filterable="false" Groupable="false" FixedHeader FixedFooter Dense>
                     <ToolBarContent>
                         <MudFileUpload T="IBrowserFile" FilesChanged="UploadPlayersFile" Accept="csv">
                             <ActivatorContent>
                                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
-                                    Upload Players CSV
+                                    Upload Players
                                 </MudButton>
                             </ActivatorContent>
                         </MudFileUpload>
@@ -64,11 +72,28 @@ else
                             </CellTemplate>
                         </TemplateColumn>
                         <PropertyColumn Property="x => x.Name" Title="Player" />
-                        <PropertyColumn Property="x => x.Birthday" Title="DOB" />
+                        <PropertyColumn Property="@(x => x.Birthday.ToString("d"))" Title="DOB" />
                         <PropertyColumn Property="x => x.Height" Title="Height" />
                         <PropertyColumn Property="x => x.Weight" Title="Weight" />
+                        <TemplateColumn>
+                            <CellTemplate>
+                                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
+                            </CellTemplate>
+                        </TemplateColumn>
                     </Columns>
+                    <PagerContent>
+                        <MudButton OnClick="AddPlayer" StartIcon="@Icons.Material.Filled.Add" FullWidth>Add Player</MudButton>
+                    </PagerContent>
                 </MudDataGrid>
+            </MudItem>
+            <MudItem xs="2">
+                <div class="d-flex align-start gap-3 flex-column pa-1">
+                    <MudSwitch T="bool" Label="Snake" Value="_draft.Snake" ValueChanged="OnSnakeChanged" Color="Color.Primary"/>
+                    
+                    <MudDatePicker Date="_draft.DTStart" DateChanged="OnDateChanged" Label="Date" Variant="Variant.Outlined" Margin="Margin.Dense" Editable />
+                    
+                    <MudTimePicker Time="_draft.TimeStart" TimeChanged="OnTimeChanged" Label="Time" Variant="Variant.Outlined" Margin="Margin.Dense" AmPm Editable />
+                </div>
             </MudItem>
         </MudGrid>
 
@@ -94,6 +119,14 @@ else
     {
         if (_draft is not null && _draft.Id == DraftId) return;
 
+        _draft = await CSHLData.GetDraftByIdAsync(DraftId);
+
+        await LoadDataAsync();
+    }
+
+
+    private async Task LoadDataAsync()
+    {
         _loading = true;
         await InvokeAsync(StateHasChanged);
 
@@ -106,6 +139,69 @@ else
 
         _loading = false;
         await InvokeAsync(StateHasChanged);
+    }
+
+
+    private async Task OnPlayerUpdated(Data.CSHLPlayer player)
+    {
+        await CSHLData.SetDraftPlayersAsync(DraftId, _players);
+        await LoadDataAsync();
+    }
+    
+    
+    private async Task OnTeamUpdated(Data.CSHLTeam team)
+    {
+        await CSHLData.SetDraftTeamsAsync(DraftId, _teams);
+        await LoadDataAsync();
+    }
+
+
+    private async Task OnSnakeChanged(bool value)
+    {
+        _draft.Snake = value;
+        await CSHLData.UpdateDraftAsync(_draft);
+    }
+
+    private async Task OnDateChanged(DateTime? value)
+    {
+        _draft.DTStart = value;
+        await CSHLData.UpdateDraftAsync(_draft);
+    }
+
+    private async Task OnTimeChanged(TimeSpan? value)
+    {
+        _draft.TimeStart = value;
+        await CSHLData.UpdateDraftAsync(_draft);
+    }
+    
+
+    private async Task AddPlayer()
+    {
+        _players = _players.Prepend(new()
+        {
+            Name = "New Player",
+            Birthday = DateTime.Now,
+            Height = "6'0",
+            Weight = "180 lb",
+            HeadshotUrl = "",
+        });
+        
+        await CSHLData.SetDraftPlayersAsync(DraftId, _players);
+    }
+
+
+    private async Task AddTeam()
+    {
+        var nextPick = _teams.Any() ? _teams.Max(x => x.Pick) + 1 : 1;
+        
+        _teams = _teams.Prepend(new()
+        {
+            Name = "New Team",
+            LogoUrl = "",
+            Pick = nextPick
+        });
+        
+        await CSHLData.SetDraftTeamsAsync(DraftId, _teams);
     }
 
 
@@ -133,7 +229,7 @@ else
 
         await CSHLData.SetDraftPlayersAsync(DraftId, upload.Data);
 
-        _players = await CSHLData.GetPlayersInDraftAsync(DraftId);
+        await LoadDataAsync();
     }
 
 }

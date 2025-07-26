@@ -14,10 +14,13 @@ public interface ICSHLData
     Task<IEnumerable<CSHLDraft>> GetDraftsAsync();
     Task<CSHLDraft?> CreateDraftAsync(CSHLDraft draft);
     Task<CSHLDraft?> GetDraftByIdAsync(int draftId);
+    Task UpdateDraftAsync(CSHLDraft draft);
     Task<IEnumerable<CSHLPlayer>> GetPlayersInDraftAsync(int draftId);
     Task<IEnumerable<CSHLTeam>> GetTeamsInDraftAsync(int draftId);
+    Task SetDraftPlayersAsync(int draftId, IEnumerable<CSHLPlayer> players);
     Task SetDraftPlayersAsync(int draftId, IEnumerable<InputPlayer> players);
-
+    Task SetDraftTeamsAsync(int draftId, IEnumerable<CSHLTeam> teams);
+    Task SetDraftTeamsAsync(int draftId, IEnumerable<InputTeam> teams);
     Task<IEnumerable<CSHLDraftPick>> GetDraftPicksAsync(int draftId); 
     Task<CSHLDraftPick?> GetMostRecentDraftPickAsync(int draftId);
     Task<CSHLTeam?> GetTeamWithCurrentPickAsync(int draftId);
@@ -74,6 +77,15 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
         return await QueryDbSingleAsync<CSHLDraft>("select * from draft where id = @DraftId", new { DraftId = draftId });
     }
 
+    public async Task UpdateDraftAsync(CSHLDraft draft)
+    {
+        await ExecuteSqlAsync(@"UPDATE draft SET
+                                            state = @State,
+                                            snake = @Snake,
+                                            dtstart = @DTStart
+                                        WHERE id = @Id", draft);
+    }
+
     public async Task<IEnumerable<CSHLPlayer>> GetPlayersInDraftAsync(int draftId)
     {
         return await QueryDbAsync<CSHLPlayer>("select p.* from player p where p.draft_id = @DraftId", new { DraftId = draftId });
@@ -91,10 +103,24 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
     
     public async Task<IEnumerable<CSHLTeam>> GetTeamsInDraftAsync(int draftId)
     {
-        return [];
+        return await QueryDbAsync<CSHLTeam>("select * from team where draft_id = @DraftId", new { DraftId = draftId });
     }
 
 
+    public async Task SetDraftPlayersAsync(int draftId, IEnumerable<CSHLPlayer> players)
+    {
+        var inputPlayers = players.Select(x => new InputPlayer
+        {
+            Name = x.Name,
+            Birthday = x.Birthday,
+            Height = x.Height,
+            Weight = x.Weight,
+            HeadshotURL = x.HeadshotUrl
+        });
+
+        await SetDraftPlayersAsync(draftId, inputPlayers);
+    }
+    
     public async Task SetDraftPlayersAsync(int draftId, IEnumerable<InputPlayer> players)
     {
         await ExecuteTransactionAsync(async () =>
@@ -103,7 +129,7 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
 
 
             string sql = @"INSERT INTO player(name, birthday, height, weight, headshoturl, draft_id)
-                        VALUES(@Name, @DOB, @Height, @Weight, @HeadshotURL, @DraftId)";
+                        VALUES(@Name, @Birthday, @Height, @Weight, @HeadshotURL, @DraftId)";
             var parameters = players.Select(x =>
             {
                 var parameter = new DynamicParameters(x);
@@ -112,7 +138,37 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
             });
             await ExecuteSqlAsync(sql, parameters);
         });
+    }
 
+    public async Task SetDraftTeamsAsync(int draftId, IEnumerable<CSHLTeam> teams)
+    {
+        var inputTeams = teams.Select(x => new InputTeam
+        {
+            Name = x.Name,
+            Pick = x.Pick,
+            LogoUrl = x.LogoUrl,
+        });
+
+        await SetDraftTeamsAsync(draftId, inputTeams);
+    }
+
+    public async Task SetDraftTeamsAsync(int draftId, IEnumerable<InputTeam> teams)
+    {
+        await ExecuteTransactionAsync(async () =>
+        {
+            await ExecuteSqlAsync("delete from team where draft_id = @DraftId", new { DraftId = draftId });
+
+
+            string sql = @"INSERT INTO team(name, logourl, draft_id, pick)
+                        VALUES(@Name, @LogoUrl, @DraftId, @Pick)";
+            var parameters = teams.Select(x =>
+            {
+                var parameter = new DynamicParameters(x);
+                parameter.Add("DraftId", draftId);
+                return parameter;
+            });
+            await ExecuteSqlAsync(sql, parameters);
+        });
     }
 
 
