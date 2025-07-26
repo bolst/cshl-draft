@@ -1,9 +1,10 @@
 ﻿@page "/"
+@using System.Security.Claims
 
 @inject Data.ICSHLData CSHLData
+@inject Data.CustomAuthenticationStateProvider CustomAuthenticationStateProvider
 @inject IDialogService DialogService
 @inject NavigationManager Navigation
-
 
 <PageTitle>Home</PageTitle>
 
@@ -14,11 +15,11 @@
 }
 else
 {
-    <MudStack Wrap="Wrap.Wrap" Spacing="3" AlignItems="AlignItems.Start" StretchItems="StretchItems.None" Row>
+    <MudStack Wrap="Wrap.Wrap" Spacing="3" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Row>
         @foreach(var draft in _drafts)
         {
-            <MudLink Underline="Underline.Hover" Href="@($"/draft/config?draft={draft.Id}")">
-                <MudPaper Class="pa-3 d-flex flex-grow-1 flex-column gap-2" Height="150px" Width="200px">
+            <div>
+                <MudPaper Class="pa-3 d-flex flex-grow-1 flex-column gap-2" Height="200px" Width="300px">
                     <div class="flex-grow-1">
                         <MudText Typo="Typo.body1"><b>@draft.Name.ToUpper()</b></MudText>
                         @if (draft.DTStart is not null)
@@ -26,9 +27,18 @@ else
                             <MudText Typo="Typo.subtitle1">@draft.DTStart.Value.ToString("f")</MudText>
                         }
                         <DraftStateChip DraftState="@draft.State" />
+                        
                     </div>
+                    <MudButtonGroup OverrideStyles="false">
+                        <MudButton Href="@($"/watch?draft={draft.Id}")" Color="Color.Info" Disabled="draft.State != Data.DraftState.Live">Watch</MudButton>
+                        
+                        @if (_currentUser is not null && _currentUser.id == draft.creator_account_id)
+                        {
+                            <MudButton Href="@($"/draft/config?draft={draft.Id}")" Color="Color.Warning">Edit</MudButton>
+                        }
+                    </MudButtonGroup>
                 </MudPaper>
-            </MudLink>
+            </div>
         }
 
         <AuthorizeView>
@@ -47,6 +57,8 @@ else
 
 @code {
 
+    private Data.CSHLAccount? _currentUser;
+    
     private bool _loading;
 
     private IEnumerable<Data.CSHLDraft> _drafts = [];
@@ -57,6 +69,25 @@ else
         _drafts = await CSHLData.GetDraftsAsync();
     }
 
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        var state = await CustomAuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity is null || !state.User.Identity.IsAuthenticated)
+        {
+            return;
+        }
+
+        var claim = state.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email);
+        if (claim is null) return;
+
+        _currentUser = await CSHLData.GetAccountByEmailAsync(claim.Value);
+        
+        StateHasChanged();
+    }
+
     private async Task CreateNewDraft()
     {
         var dialog = await DialogService.ShowAsync<NewDraftDialog>();
@@ -64,7 +95,7 @@ else
 
         if (result?.Data is not Data.CSHLDraft draft) return;
 
-        var newDraft = await CSHLData.CreateDraftAsync(draft);
+        var newDraft = await CSHLData.CreateDraftAsync(draft, _currentUser!.id);
 
         if (newDraft is null)
         {

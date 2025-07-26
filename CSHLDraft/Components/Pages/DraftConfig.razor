@@ -1,5 +1,7 @@
 ﻿@page "/draft/config"
 
+@attribute [Authorize]
+
 @inject Data.ICSHLData CSHLData
 @inject Data.CsvParser ExcelService
 @inject NavigationManager Navigation

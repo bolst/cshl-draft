@@ -13,7 +13,7 @@ public interface ICSHLData
 
     
     Task<IEnumerable<CSHLDraft>> GetDraftsAsync();
-    Task<CSHLDraft?> CreateDraftAsync(CSHLDraft draft);
+    Task<CSHLDraft?> CreateDraftAsync(CSHLDraft draft, int accountId);
     Task<CSHLDraft?> GetDraftByIdAsync(Guid draftId);
     Task UpdateDraftAsync(CSHLDraft draft);
     
@@ -81,12 +81,17 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
         return await QueryDbAsync<CSHLDraft>("select * from draft");
     }
 
-    public async Task<CSHLDraft?> CreateDraftAsync(CSHLDraft draft)
+    public async Task<CSHLDraft?> CreateDraftAsync(CSHLDraft draft, int accountId)
     {
-        string sql = @"INSERT INTO draft(snake, name)
-                                VALUES (@Snake, @Name)
+        string sql = @"INSERT INTO draft(snake, name, creator_account_id)
+                                VALUES (@Snake, @Name, @AccountId)
                         RETURNING *";
-        return await QueryDbSingleAsync<CSHLDraft>(sql, draft);
+        return await QueryDbSingleAsync<CSHLDraft>(sql, new
+        {
+            Snake = draft.Snake,
+            Name = draft.Name,
+            AccountId = accountId
+        });
     }
 
     public async Task<CSHLDraft?> GetDraftByIdAsync(Guid draftId)

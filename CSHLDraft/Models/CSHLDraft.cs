@@ -7,6 +7,7 @@ public class CSHLDraft
     public string State { get; set; }
     public string Name { get; set; }
     public DateTime? DTStart { get; set; }
+    public int creator_account_id { get; set; }
 
 
     public TimeSpan? TimeStart
