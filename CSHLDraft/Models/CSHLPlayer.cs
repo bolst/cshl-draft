@@ -9,6 +9,7 @@ public class CSHLPlayer : IEquatable<CSHLPlayer>
     public string Height { get; set; }
     public string Weight { get; set; }
     public string HeadshotUrl { get; set; }
+    public string Position { get; set; }
     public Guid draft_id { get; set; }
     
     #region IEquatable

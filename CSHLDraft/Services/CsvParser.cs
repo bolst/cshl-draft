@@ -20,7 +20,7 @@ public class CsvParser
         _jsRuntime = jsRuntime;
         _csvConfiguration = new(CultureInfo.InvariantCulture)
         {
-            PrepareHeaderForMatch = args => args.Header.ToLower()
+            PrepareHeaderForMatch = args => args.Header.Trim().ToLower()
         };
     }
 
@@ -42,7 +42,7 @@ public class CsvParser
 
             retval.Data = records.ToList();
         }
-        catch
+        catch (Exception e)
         {
             retval.Message = "There was an error when parsing the file...";
         }
