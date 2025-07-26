@@ -1,7 +1,7 @@
 namespace CSHLDraft.Data;
 
 
-public class CSHLPlayer
+public class CSHLPlayer : IEquatable<CSHLPlayer>
 {
     public int Id { get; set; }
     public string Name { get; set; }
@@ -10,4 +10,15 @@ public class CSHLPlayer
     public string Weight { get; set; }
     public string HeadshotUrl { get; set; }
     public int draft_id { get; set; }
+    
+    #region IEquatable
+    
+    public bool Equals(CSHLPlayer? other) => other is not null && other.Id == Id;
+    public override bool Equals(object? obj) => Equals(obj as CSHLPlayer);
+    public override int GetHashCode() => Id.GetHashCode();
+    public static bool operator == (CSHLPlayer? left, CSHLPlayer? right) => left is null ? right is null : left.Equals(right);
+    
+    public static bool operator != (CSHLPlayer? left, CSHLPlayer? right) => left is null ? right is not null : !left.Equals(right);
+
+    #endregion
 }

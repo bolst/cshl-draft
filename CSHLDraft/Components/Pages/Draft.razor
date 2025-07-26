@@ -3,6 +3,7 @@
 @inject Data.ICSHLData CSHLData
 @inject Data.CsvParser ExcelService
 @inject NavigationManager Navigation
+@inject IDialogService DialogService
 
 
 @if (_loading)
@@ -45,12 +46,17 @@ else
                         <PropertyColumn Property="x => x.Pick" Title="Pick" />
                         <TemplateColumn>
                             <CellTemplate>
-                                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn>
+                            <CellTemplate>
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" OnClick="_ => RemoveTeam(context.Item)" />
                             </CellTemplate>
                         </TemplateColumn>
                     </Columns>
                     <PagerContent>
-                        <MudButton OnClick="AddTeam" StartIcon="@Icons.Material.Filled.Add" FullWidth>Add Team</MudButton>
+                        <MudButton Class="mud-elevation-2" OnClick="AddTeam" StartIcon="@Icons.Material.Filled.Add" Disabled="_loading" FullWidth>Add Team</MudButton>
                     </PagerContent>
                 </MudDataGrid>
             </MudItem>
@@ -77,22 +83,25 @@ else
                         <PropertyColumn Property="x => x.Weight" Title="Weight" />
                         <TemplateColumn>
                             <CellTemplate>
-                                <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn>
+                            <CellTemplate>
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" OnClick="_ => RemovePlayer(context.Item)" />
                             </CellTemplate>
                         </TemplateColumn>
                     </Columns>
                     <PagerContent>
-                        <MudButton OnClick="AddPlayer" StartIcon="@Icons.Material.Filled.Add" FullWidth>Add Player</MudButton>
+                        <MudButton Class="mud-elevation-2" OnClick="AddPlayer" StartIcon="@Icons.Material.Filled.Add" Disabled="_loading" FullWidth>Add Player</MudButton>
                     </PagerContent>
                 </MudDataGrid>
             </MudItem>
             <MudItem xs="2">
                 <div class="d-flex align-start gap-3 flex-column pa-1">
-                    <MudSwitch T="bool" Label="Snake" Value="_draft.Snake" ValueChanged="OnSnakeChanged" Color="Color.Primary"/>
-                    
-                    <MudDatePicker Date="_draft.DTStart" DateChanged="OnDateChanged" Label="Date" Variant="Variant.Outlined" Margin="Margin.Dense" Editable />
-                    
-                    <MudTimePicker Time="_draft.TimeStart" TimeChanged="OnTimeChanged" Label="Time" Variant="Variant.Outlined" Margin="Margin.Dense" AmPm Editable />
+                    <MudSwitch T="bool" Label="Snake" Value="_draft.Snake" ValueChanged="OnSnakeChanged" Color="Color.Primary" Disabled="_loading" />
+                    <MudDatePicker Date="_draft.DTStart" DateChanged="OnDateChanged" Label="Date" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="_loading" Editable />
+                    <MudTimePicker Time="_draft.TimeStart" TimeChanged="OnTimeChanged" Label="Time" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="_loading" AmPm Editable />
                 </div>
             </MudItem>
         </MudGrid>
@@ -119,9 +128,13 @@ else
     {
         if (_draft is not null && _draft.Id == DraftId) return;
 
-        _draft = await CSHLData.GetDraftByIdAsync(DraftId);
-
         await LoadDataAsync();
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
     }
 
 
@@ -204,6 +217,25 @@ else
         await CSHLData.SetDraftTeamsAsync(DraftId, _teams);
     }
 
+
+    private async Task RemovePlayer(Data.CSHLPlayer player)
+    {
+        var confirm = await DialogService.ShowMessageBox("Confirm", $"Remove {player.Name}?",  yesText: "Yes", noText: "No");
+        if (!confirm.GetValueOrDefault()) return;
+        
+        _players = _players.Except([player]);
+        await CSHLData.SetDraftPlayersAsync(DraftId, _players);
+    }
+
+
+    private async Task RemoveTeam(Data.CSHLTeam team)
+    {
+        var confirm = await DialogService.ShowMessageBox("Confirm", $"Remove {team.Name}?",  yesText: "Yes", noText: "No");
+        if (!confirm.GetValueOrDefault()) return;
+        
+        _teams = _teams.Except([team]);
+        await CSHLData.SetDraftTeamsAsync(DraftId, _teams);
+    }
 
 
     private async Task UploadTeamsFile(IBrowserFile file)

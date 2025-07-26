@@ -1,11 +1,22 @@
 namespace CSHLDraft.Data;
 
 
-public class CSHLTeam
+public class CSHLTeam : IEquatable<CSHLTeam>
 {
     public int Id { get; set; }
     public string Name { get; set; }
     public string LogoUrl { get; set; }
     public int draft_id { get; set; }
     public int Pick { get; set; }
+    
+    #region IEquatable
+    
+    public bool Equals(CSHLTeam? other) => other is not null && other.Id == Id;
+    public override bool Equals(object? obj) => Equals(obj as CSHLTeam);
+    public override int GetHashCode() => Id.GetHashCode();
+    public static bool operator == (CSHLTeam? left, CSHLTeam? right) => left is null ? right is null : left.Equals(right);
+    
+    public static bool operator != (CSHLTeam? left, CSHLTeam? right) => left is null ? right is not null : !left.Equals(right);
+
+    #endregion
 }
