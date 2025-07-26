@@ -8,7 +8,9 @@ public class CSHLTeam : IEquatable<CSHLTeam>
     public string LogoUrl { get; set; }
     public Guid draft_id { get; set; }
     public int Pick { get; set; }
-    
+    public string PrimaryHex { get; set; } = "#BC1B20";
+    public string SecondaryHex { get; set; } = "#FFFFFF";
+
     #region IEquatable
     
     public bool Equals(CSHLTeam? other) => other is not null && other.Id == Id;

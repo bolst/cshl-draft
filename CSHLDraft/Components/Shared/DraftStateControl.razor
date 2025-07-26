@@ -1,0 +1,62 @@
+@inherits HubComponentBase
+
+@inject Data.ICSHLData CSHLData
+
+@if (_draft is not null)
+{
+    if (_draft.State == Data.DraftState.Live)
+    {
+        <MudButton OnClick="EndDraft" Color="Color.Error" FullWidth="FullWidth">End Draft</MudButton>
+    }
+    else if (_draft.State == Data.DraftState.Inactive)
+    {
+        <MudButton OnClick="BeginDraft" Color="Color.Info" FullWidth="FullWidth">Start Draft</MudButton>
+    }
+}
+
+@code {
+
+    [Parameter, EditorRequired]
+    public required Guid DraftId { get; set; }
+
+    [Parameter]
+    public bool FullWidth { get; set; }
+
+    private Data.CSHLDraft? _draft;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_draft is not null && DraftId == _draft.Id) return;
+
+        _draft = await CSHLData.GetDraftByIdAsync(DraftId);
+    }
+    
+    
+    public async Task BeginDraft()
+    {
+        if (_draft is null) return;
+        
+        await CSHLData.UpdateDraftStateAsync(_draft.Id, Data.DraftState.Live);
+        await Hub.SendAsync(nameof(Hubs.DraftHub.PushDraftStateChange));
+    }
+
+    public async Task EndDraft()
+    {
+        if (_draft is null) return;
+        
+        await CSHLData.UpdateDraftStateAsync(_draft.Id, Data.DraftState.Active);
+        await Hub.SendAsync(nameof(Hubs.DraftHub.PushDraftStateChange));
+    }
+    
+    
+    protected override void AddHubHandlers()
+    {
+        Hub.On(Hubs.DraftHub.Events.OnDraftUpdate, async () =>
+        {
+            _draft = await CSHLData.GetDraftByIdAsync(DraftId);
+            await InvokeAsync(StateHasChanged);
+        });
+    }
+
+}

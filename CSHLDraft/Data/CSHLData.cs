@@ -11,21 +11,36 @@ public interface ICSHLData
     Task<CSHLRefreshToken?> GetRefreshTokenAsync(Guid localId, string provider);
 
 
+    
     Task<IEnumerable<CSHLDraft>> GetDraftsAsync();
     Task<CSHLDraft?> CreateDraftAsync(CSHLDraft draft);
     Task<CSHLDraft?> GetDraftByIdAsync(Guid draftId);
     Task UpdateDraftAsync(CSHLDraft draft);
+    
+    
+    
     Task<IEnumerable<CSHLPlayer>> GetPlayersInDraftAsync(Guid draftId);
+    Task<IEnumerable<CSHLPlayer>> GetDraftAvailablePlayersAsync(Guid draftId);
+    Task<IEnumerable<CSHLPlayer>> GetRosterByTeamIdAsync(Guid teamId);
     Task<IEnumerable<CSHLTeam>> GetTeamsInDraftAsync(Guid draftId);
+    
+    
+    
     Task SetDraftPlayersAsync(Guid draftId, IEnumerable<InputPlayer> players);
     Task SetDraftPlayersAsync(Guid draftId, IEnumerable<CSHLPlayer> players);
     Task SetDraftTeamsAsync(Guid draftId, IEnumerable<InputTeam> teams);
     Task SetDraftTeamsAsync(Guid draftId, IEnumerable<CSHLTeam> teams);
-    Task<IEnumerable<CSHLDraftPick>> GetDraftPicksAsync(Guid draftId); 
-    Task<CSHLDraftPick?> GetMostRecentDraftPickAsync(Guid draftId);
-    Task<CSHLTeam?> GetTeamWithCurrentPickAsync(Guid draftId);
-    Task DraftPlayerAsync(Guid draftId, CSHLPlayer player, CSHLTeam team, CSHLDraftPick pick);
+    
+    
+    
+    Task<IEnumerable<CSHLDraftPickDetail>> GetDraftPicksAsync(Guid draftId); 
+    Task<CSHLDraftPickDetail?> GetCurrentPickAsync(Guid draftId);
+    Task DraftPlayerAsync(CSHLPlayer player, CSHLDraftPickDetail pick);
     Task ResetDraftAsync(Guid draftId);
+
+
+    
+    Task UpdateDraftStateAsync(Guid draftId, string state);
 }
 
 
@@ -59,6 +74,8 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
         return await QueryDbSingleAsync<CSHLRefreshToken>(sql, new { LocalId = localId, Provider = provider });
     }        
     
+    
+    
     public async Task<IEnumerable<CSHLDraft>> GetDraftsAsync()
     {
         return await QueryDbAsync<CSHLDraft>("select * from draft");
@@ -86,19 +103,21 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
                                         WHERE id = @Id", draft);
     }
 
+    
+    
     public async Task<IEnumerable<CSHLPlayer>> GetPlayersInDraftAsync(Guid draftId)
     {
         return await QueryDbAsync<CSHLPlayer>("select p.* from player p where p.draft_id = @DraftId", new { DraftId = draftId });
     }
 
-    public async Task<IEnumerable<CSHLDraftPick>> GetDraftPicksAsync(Guid draftId)
+    public async Task<IEnumerable<CSHLPlayer>> GetDraftAvailablePlayersAsync(Guid draftId)
     {
-        return [];
+        return await QueryDbAsync<CSHLPlayer>("select p.* from player p where p.draft_id = @DraftId and p.id not in (select player_id from draft_pick where draft_id = @DraftId)", new { DraftId = draftId });
     }
     
-    public async Task<CSHLDraftPick?> GetMostRecentDraftPickAsync(Guid draftId)
+    public async Task<IEnumerable<CSHLPlayer>> GetRosterByTeamIdAsync(Guid teamId)
     {
-        return null;
+        return await QueryDbAsync<CSHLPlayer>("select p.* from player p inner join draft_pick d on d.player_id = p.id and d.team_id = @TeamId", new { TeamId = teamId });
     }
     
     public async Task<IEnumerable<CSHLTeam>> GetTeamsInDraftAsync(Guid draftId)
@@ -107,6 +126,7 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
     }
 
 
+    
     public async Task SetDraftPlayersAsync(Guid draftId, IEnumerable<InputPlayer> players)
     {
         var cshlPlayers = players.Select(x => x.ToCSHLPlayer());
@@ -156,19 +176,74 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
     }
 
 
-    public async Task<CSHLTeam?> GetTeamWithCurrentPickAsync(Guid draftId)
+    
+    public async Task<IEnumerable<CSHLDraftPickDetail>> GetDraftPicksAsync(Guid draftId)
     {
-        return null;
+        return await QueryDbAsync<CSHLDraftPickDetail>("select * from draftpickdetail where draft_id = @DraftId", new { DraftId = draftId });
     }
     
-    public async Task DraftPlayerAsync(Guid draftId, CSHLPlayer player, CSHLTeam team, CSHLDraftPick pick)
+    public async Task<CSHLDraftPickDetail?> GetCurrentPickAsync(Guid draftId)
     {
-        
+        string sql = @"WITH
+	                        last_pick AS (
+		                        SELECT
+			                        COALESCE(MAX(pick), 0) AS pick
+		                        FROM
+			                        draft_pick
+		                        WHERE
+			                        draft_id = @DraftId
+	                        )
+                        SELECT
+	                        l.pick + 1 AS pick,
+	                        t.id AS team_id,
+	                        t.draft_id AS draft_id,
+	                        t.gm_account_id,
+	                        (a.firstname || ' '::TEXT) || a.lastname AS gmname,
+	                        t.logourl AS teamlogo,
+	                        t.name AS teamname,
+	                        get_round (
+		                        @DraftId,
+		                        l.pick + 1
+	                        ) AS ROUND,
+	                        get_round_pick (
+		                        @DraftId,
+		                        l.pick + 1
+	                        ) AS roundpick,
+	                        t.primaryhex,
+	                        t.secondaryhex
+                        FROM
+	                        team t
+	                        CROSS JOIN last_pick l
+	                        LEFT OUTER JOIN account a ON t.gm_account_id = a.id
+                        WHERE
+	                        t.id = get_team_with_current_pick (@DraftId)
+                        LIMIT
+	                        1";
+
+        return await QueryDbSingleAsync<CSHLDraftPickDetail>(sql, new { DraftId = draftId });
+    }
+    
+    public async Task DraftPlayerAsync(CSHLPlayer player, CSHLDraftPickDetail pick)
+    {
+        await ExecuteSqlAsync(@"insert into draft_pick (team_id, player_id, draft_id, pick)
+                                                    values (@TeamId, @PlayerId, @DraftId, @Pick)", new
+        {
+            TeamId = pick.team_id,
+            PlayerId = player.Id,
+            DraftId = pick.draft_id,
+            Pick = pick.pick,
+        });
     }
     
     public async Task ResetDraftAsync(Guid draftId)
     {
-        
+        await ExecuteSqlAsync("delete from draft_pick where draft_id = @DraftId", new { DraftId = draftId });
     }
-    
+
+
+
+    public async Task UpdateDraftStateAsync(Guid draftId, string state)
+    {
+        await ExecuteSqlAsync("update draft set state = @State where id = @DraftId", new { DraftId = draftId, State = state });
+    }
 }

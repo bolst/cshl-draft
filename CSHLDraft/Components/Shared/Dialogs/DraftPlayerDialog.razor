@@ -1,0 +1,42 @@
+@namespace CSHLDraft.Components.Shared
+
+<MudDialog>
+    <TitleContent>
+        <MudStack AlignItems="AlignItems.Center" Row>
+            <MudText Typo="Typo.h5">@Player.Name (@Player.Birthday.ToString("yyyy"))</MudText>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudStack Spacing="8" Row>
+            <div>
+                <MudImage Src="@Player.HeadshotUrl" Width="300"/>
+            </div>
+            <div>
+                <MudText Class="my-4" Typo="Typo.h6">Height - @Player.Height</MudText>
+                <MudText Class="my-4" Typo="Typo.h6">Weight - @Player.Weight</MudText>
+            </div>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton
+            Class="mud-theme-dark"
+            Variant="Variant.Filled"
+            OnClick="OnDraftPlayer">
+            Draft
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] 
+    private IMudDialogInstance MudDialog { get; set; }
+    
+    [Parameter, EditorRequired]
+    public required Data.CSHLPlayer Player { get; set; }
+    
+    private void OnDraftPlayer() => MudDialog.Close(DialogResult.Ok(true));
+
+    private void OnCancel() => MudDialog.Cancel();
+
+}

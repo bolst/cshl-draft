@@ -2,7 +2,7 @@
 
 public class InputTeam
 {
-    public string LogoUrl { get; set; }
+    public string? LogoUrl { get; set; }
     public string Name { get; set; }
     public int Pick { get; set; }
 
@@ -12,6 +12,6 @@ public class InputTeam
         Id = Guid.NewGuid(),
         Name = Name,
         Pick = Pick,
-        LogoUrl = LogoUrl,
+        LogoUrl = LogoUrl ?? CSHLTheme.LogoUrl,
     };
 }

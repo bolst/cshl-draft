@@ -1,0 +1,94 @@
+@inherits HubComponentBase
+
+@inject Data.ICSHLData CSHLData
+@inject IDialogService DialogService
+
+@if (_teams is not null)
+{
+    
+    <MudStack Class="py-4" AlignItems="AlignItems.Center" Spacing="2">
+        <DraftPickTimer Draft="Draft" />
+        
+        <MudDivider />
+     
+        @foreach (var team in _teams)
+        {
+            if (_currentPick is not null && _currentPick.team_id == team.Id)
+            {
+                <MudPaper 
+                    Class="d-flex align-center border-double border-4" 
+                    Style="@($"border-color: {team.SecondaryHex}; box-shadow: inset 0 0 0 2000px {team.PrimaryHex}ff;")" 
+                    Height="50px" 
+                    Width="100%" 
+                    Square>
+                    <MudStack AlignItems="AlignItems.Center" Row>
+                        <MudImage Src="@team.LogoUrl" Height="40" />
+                        <MudText Typo="Typo.button" Style="@($"color: {team.SecondaryHex}")"><b>@team.Name</b></MudText>
+                    </MudStack>
+                </MudPaper>
+            }
+            else
+            {
+                <MudPaper 
+                    Class="d-flex align-center" 
+                    Style="@($"box-shadow: inset 0 0 0 2000px {team.PrimaryHex}66;")" 
+                    Height="50px" 
+                    Width="100%" 
+                    Square>
+                    <MudStack AlignItems="AlignItems.Center" Row>
+                        <MudImage Src="@team.LogoUrl" Height="40" />
+                        <MudText Typo="Typo.button" Style="@($"color: {team.SecondaryHex}")"><b>@team.Name</b></MudText>
+                    </MudStack>
+                </MudPaper>
+            }
+        }
+        
+        <MudSpacer />
+        
+        <MudButton OnClick="OnDraftBoardClicked" Color="Color.Info" Size="Size.Large" Variant="Variant.Filled">Draft Board</MudButton>
+    </MudStack>
+}
+
+@code{
+
+    [Parameter, EditorRequired]
+    public required Data.CSHLDraft Draft { get; set; }
+
+    private Guid? _draftId;
+    
+    private IEnumerable<Data.CSHLTeam>? _teams;
+    private Data.CSHLDraftPickDetail? _currentPick;
+
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_draftId is not null && Draft.Id == _draftId) return;
+
+        _draftId = Draft.Id;
+        
+        _teams = await CSHLData.GetTeamsInDraftAsync(Draft.Id);
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        var pick = await CSHLData.GetCurrentPickAsync(Draft.Id);
+        _currentPick = pick;
+        
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task OnDraftBoardClicked()
+    {
+        return DialogService.ShowAsync<DraftBoardDialog>("Draft Board", new DialogParameters<DraftBoardDialog>
+        {
+            { x => x.Draft, Draft }
+        });
+    }
+    
+    protected override void AddHubHandlers()
+    {
+        Hub.On(Hubs.DraftHub.Events.OnDraftUpdate, async () => await LoadDataAsync());
+    }
+
+}

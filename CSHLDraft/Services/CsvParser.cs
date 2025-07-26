@@ -1,4 +1,5 @@
-﻿using Microsoft.JSInterop;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.JSInterop;
 using Microsoft.AspNetCore.Components.Forms;
 using CsvHelper;
 using System.Globalization;
@@ -10,7 +11,7 @@ namespace CSHLDraft.Data;
 public class CsvParser
 {
 
-    private readonly IJSRuntime _jsRuntime;
+    private readonly IJSRuntime _jsRuntime; // for downloading files
     
     private CsvConfiguration _csvConfiguration;
 
@@ -56,5 +57,7 @@ public class FileUploadResult<T>
     public string FileName { get; set; } = string.Empty;
     public IEnumerable<T>? Data { get; set; }
     public string Message { get; set; } = string.Empty;
+    
+    [MemberNotNullWhen( returnValue: true, nameof(Data))]
     public bool Success => Data is not null;
 }

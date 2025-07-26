@@ -39,7 +39,7 @@ else
                     <Columns>
                         <TemplateColumn>
                             <CellTemplate>
-                                <MudImage Src="@context.Item.LogoUrl" Height="30" />
+                                <MudImage Src="@context.Item.LogoUrl" FallbackSrc="@CSHLTheme.EmptyProfileUrl" Height="30" />
                             </CellTemplate>
                         </TemplateColumn>
                         <PropertyColumn Property="x => x.Name" Title="Team" />
@@ -251,13 +251,17 @@ else
 
     private async Task UploadTeamsFile(IBrowserFile file)
     {
-        var data = await ExcelService.ParseCsvAsync<Data.InputTeam>(file);
+        var upload = await ExcelService.ParseCsvAsync<Data.InputTeam>(file);
 
-        if (!data.Success)
+        if (!upload.Success)
         {
-            _errorMessage = data.Message;
+            _errorMessage = upload.Message;
             return;
         }
+
+        await CSHLData.SetDraftTeamsAsync(DraftId, upload.Data);
+
+        await LoadDataAsync();
     }
 
     private async Task UploadPlayersFile(IBrowserFile file)
@@ -269,7 +273,7 @@ else
             _errorMessage = upload.Message;
             return;
         }
-
+        
         await CSHLData.SetDraftPlayersAsync(DraftId, upload.Data);
 
         await LoadDataAsync();

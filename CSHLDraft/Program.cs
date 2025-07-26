@@ -1,8 +1,8 @@
+using CSHLDraft.Hubs;
 using CSHLDraft.Components;
 using CSHLDraft.Data;
 using MudBlazor.Services;
 using Blazored.LocalStorage;
-using CSHLDraft;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Supabase;
@@ -59,8 +59,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddScoped<CustomUserService>();
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(provider => provider.GetRequiredService<CustomAuthenticationStateProvider>());
-
-builder.Services.AddScoped<DraftService>();
 
 builder.Services.AddSignalR();
 

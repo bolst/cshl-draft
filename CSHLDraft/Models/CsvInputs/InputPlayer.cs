@@ -6,7 +6,7 @@ public class InputPlayer
     public DateTime Birthday { get; set; }
     public string Height { get; set; }
     public string Weight { get; set; }
-    public string HeadshotURL { get; set; }
+    public string? HeadshotURL { get; set; }
 
     public CSHLPlayer ToCSHLPlayer() => new()
     {
@@ -15,6 +15,6 @@ public class InputPlayer
         Birthday = Birthday,
         Height = Height,
         Weight = Weight,
-        HeadshotUrl = HeadshotURL,
+        HeadshotUrl = HeadshotURL ?? CSHLTheme.EmptyProfileUrl,
     };
 }

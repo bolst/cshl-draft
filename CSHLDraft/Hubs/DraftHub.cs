@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 
-namespace CSHLDraft.Data;
+namespace CSHLDraft.Hubs;
 
 public class DraftHub : Hub
 {
@@ -8,12 +8,12 @@ public class DraftHub : Hub
 
     public async Task PushDraftUpdate()
     {
-        await Clients.All.SendAsync(Events.OnDraftUpdate);
+        await Clients.Others.SendAsync(Events.OnDraftUpdate);
     }
 
     public async Task PushDraftStateChange()
     {
-        await Clients.All.SendAsync(Events.OnDraftStateChange);
+        await Clients.Others.SendAsync(Events.OnDraftStateChange);
     }
 
     public async Task PushTimerStateChange(string jsCommand)

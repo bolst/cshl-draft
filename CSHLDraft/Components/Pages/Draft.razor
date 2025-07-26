@@ -14,22 +14,28 @@
     <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert>
         <MudItem xs="3">
             <MudPaper Width="100%" Height="90vh" Class="mud-theme-surface" Elevation="3">
-                @* <CurrentTeamDraftBoard /> *@
-                currnet team
+                @if (_draft is not null)
+                {
+                    <DraftRosters Draft="_draft" />
+                }
             </MudPaper>
         </MudItem>
     </MudHidden>
     <MudItem xs="12" md="7">
         <MudPaper Width="100%" Height="90vh" Class="mud-theme-surface" Elevation="3">
-            @* <PlayerTable Disabled="_disabled" /> *@
-            payer tabl
+            @if (_draft is not null)
+            {
+                <DraftDataGrid Draft="_draft" Disabled="_disabled" />
+            }
         </MudPaper>
     </MudItem>
     <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert>
         <MudItem xs="2">
             <MudPaper Width="100%" Height="90vh" Class="mud-theme-surface" Elevation="3">
-                @* <DraftStatus /> *@
-                staus
+                @if (_draft is not null)
+                {
+                    <DraftStatus Draft="_draft" />
+                }
             </MudPaper>
         </MudItem>
     </MudHidden>
@@ -64,14 +70,14 @@
         _draft = await CSHLData.GetDraftByIdAsync(DraftId);
         if (_draft is null) return;
 
-        _disabled = _draft.State == Data.DraftState.Inactive;
+        _disabled = _draft.State != Data.DraftState.Live;
         await InvokeAsync(StateHasChanged);
     }
 
 
     protected override void AddHubHandlers()
     {
-        Hub.On(Data.DraftHub.Events.OnDraftStateChange, async () =>
+        Hub.On(Hubs.DraftHub.Events.OnDraftStateChange, async () =>
         {
             await LoadDataAsync();
             await InvokeAsync(StateHasChanged);

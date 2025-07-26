@@ -37,11 +37,11 @@
                         <div class="d-flex justify-center" style="width: 40px">
                             <MudText Typo="Typo.h6" Class="px-2"><b>@pick.pick</b></MudText>
                         </div>
-                        <div class="d-flex align-center flex-row" style="@($"height: 40px; width: 40px; background-color: {pick.PrimaryColorHex}DD")">
+                        <div class="d-flex align-center flex-row" style="@($"height: 40px; width: 40px; background-color: {pick.PrimaryHex}DD")">
                             <MudImage Src="@pick.TeamLogo" Width="40" />
                         </div>
                         <MudPaper Class="pa-2" Width="218px" Height="38px" Elevation="0" Square>
-                            <MudText Align="Align.Start" Typo="Typo.subtitle2" Color="Color.Inherit">@pick.Name.ToUpper()</MudText>
+                            <MudText Align="Align.Start" Typo="Typo.subtitle2" Color="Color.Inherit">@pick.PlayerName.ToUpper()</MudText>
                         </MudPaper>
                     </div>
                 </MudPaper>
@@ -62,8 +62,8 @@
                     </MudStack>
 
                     <MudStack AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Row>
-                        <MudText Typo="Typo.h6">Round @_lastPick.round Pick @_lastPick.pick</MudText>
-                        <MudText Typo="Typo.h5">@_lastPick.Name</MudText>
+                        <MudText Typo="Typo.h6">Round @_lastPick.Round Pick @_lastPick.pick</MudText>
+                        <MudText Typo="Typo.h5">@_lastPick.PlayerName</MudText>
                     </MudStack>
                 </MudStack>
                 
@@ -82,16 +82,15 @@
     private Guid DraftId;
 
     private bool _overlayVisible;
-    private Data.CSHLDraftPick? _lastPick;
+    private Data.CSHLDraftPickDetail? _lastPick;
     
     private Data.CSHLDraft? _draft;
-    private IEnumerable<Data.CSHLDraftPick> _draftPicks = [];
+    private IEnumerable<Data.CSHLDraftPickDetail> _draftPicks = [];
 
-    private IEnumerable<IGrouping<int, Data.CSHLDraftPick>> DraftRoundGrouping
-        => _draftPicks.GroupBy(x => x.pick);
-            //.OrderByDescending(x => x.round)
-            //.ThenBy(x => x.pick)
-            //.GroupBy(x => x.round);
+    private IEnumerable<IGrouping<int, Data.CSHLDraftPickDetail>> DraftRoundGrouping
+        => _draftPicks
+            .OrderBy(x => x.RoundPick)
+            .GroupBy(x => x.Round);
 
 
     protected override async Task OnParametersSetAsync()
@@ -131,14 +130,14 @@
 
     protected override void AddHubHandlers()
     { 
-        Hub.On(Data.DraftHub.Events.OnDraftUpdate, async () =>
+        Hub.On(Hubs.DraftHub.Events.OnDraftUpdate, async () =>
         {
             await LoadDataAsync();
             await ShowLastPickOverlay();
         });
 
         Func<Task> draftStateChangeEvent = async () => { _draft = await CSHLData.GetDraftByIdAsync(DraftId); };
-        Hub.On(Data.DraftHub.Events.OnDraftStateChange, draftStateChangeEvent);
+        Hub.On(Hubs.DraftHub.Events.OnDraftStateChange, draftStateChangeEvent);
     }
     
 }

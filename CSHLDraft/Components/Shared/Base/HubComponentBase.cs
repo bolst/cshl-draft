@@ -17,7 +17,7 @@ public abstract class HubComponentBase : ComponentBase, IAsyncDisposable
     protected override async Task OnInitializedAsync()
     {
         Hub ??= new HubConnectionBuilder()
-            .WithUrl(Navigation.ToAbsoluteUri(Data.DraftHub.HubUrl))
+            .WithUrl(Navigation.ToAbsoluteUri(Hubs.DraftHub.HubUrl))
             .WithAutomaticReconnect()
             .Build();
 
