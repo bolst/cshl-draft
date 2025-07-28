@@ -3,68 +3,82 @@
 @inject Data.ICSHLData CSHLData
 
 <MudStack AlignItems="AlignItems.Center">
-    @if (_pick is not null)
+    @if (_loading)
     {
-        <MudStack Class="pt-2" Justify="Justify.Center" Row>
-            @if (_pick.team_id == _selectedTeam?.Id)
-            {
-                <MudText Typo="Typo.h5"><b>Round @_pick.Round, Pick @_pick.RoundPick</b></MudText>
-            }
-            else
-            {
-                <MudText Typo="Typo.h5"><b>&nbsp;</b></MudText>
-            }
-        </MudStack>
-
-        if (_selectedTeam is not null)
-        {
-            <MudStack AlignItems="AlignItems.Center" Spacing="5" Row>
-                <MudStack Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Row>
-                    <MudImage Src="@_selectedTeam.LogoUrl" Height="70"/>
-                    <MudText Typo="Typo.h6"><b>@_selectedTeam.Name</b></MudText>
-                </MudStack>
-            </MudStack>
-        }
-        
-        <MudChipSet 
-            T="Data.CSHLTeam"
-            Color="Color.Transparent"
-            SelectedValue="_selectedTeam" 
-            SelectedValueChanged="OnSelectedTeamChange"
-            SelectionMode="SelectionMode.SingleSelection"
-            SelectedColor="Color.Dark"
-            Variant="Variant.Text"
-            Size="Size.Small">
-            @foreach (var team in _draftTeams)
-            {
-                <MudChip Value="@team">
-                    <MudImage Src="@team.LogoUrl" Width="30" />
-                </MudChip>
-            }
-        </MudChipSet>
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="22vh" Width="100%" />
     }
-    
-    <MudDivider />
-    
-    @if (_roster is not null)
+    else
     {
-        <MudSimpleTable Style="height: 63vh; width: 100%" FixedHeader Dense Striped>
-            <thead>
-            <tr>
-                <th style="width: 50px"></th>
-                <th>PLAYERS (@_roster.Count())</th>
-            </tr>
-            </thead>
-            <tbody>
+        if (_pick is not null)
+        {
+            <MudStack Class="pt-2" Justify="Justify.Center" Row>
+                @if (_pick.team_id == _selectedTeam?.Id)
+                {
+                    <MudText Typo="Typo.h5"><b>Round @_pick.Round, Pick @_pick.RoundPick</b></MudText>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h5"><b>&nbsp;</b></MudText>
+                }
+            </MudStack>
+
+            if (_selectedTeam is not null)
+            {
+                <MudStack AlignItems="AlignItems.Center" Spacing="5" Row>
+                    <MudStack Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Row>
+                        <MudImage Src="@_selectedTeam.LogoUrl" Height="70"/>
+                        <MudText Typo="Typo.h6"><b>@_selectedTeam.Name</b></MudText>
+                    </MudStack>
+                </MudStack>
+            }
+
+            <MudChipSet
+                T="Data.CSHLTeam"
+                Color="Color.Transparent"
+                SelectedValue="_selectedTeam"
+                SelectedValueChanged="OnSelectedTeamChange"
+                SelectionMode="SelectionMode.SingleSelection"
+                SelectedColor="Color.Dark"
+                Variant="Variant.Text"
+                Size="Size.Small">
+                @foreach (var team in _draftTeams)
+                {
+                    <MudChip Value="@team">
+                        <MudImage Src="@team.LogoUrl" Width="30"/>
+                    </MudChip>
+                }
+            </MudChipSet>
+        }
+    }
+
+    <MudDivider/>
+    
+    @if (_loading)
+    {
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="63vh" Width="100%" />
+    }
+    else
+    {
+        if (_roster is not null)
+        {
+            <MudSimpleTable Style="height: 63vh; width: 100%" FixedHeader Dense Striped>
+                <thead>
+                <tr>
+                    <th style="width: 50px"></th>
+                    <th>PLAYERS (@_roster.Count())</th>
+                </tr>
+                </thead>
+                <tbody>
                 @foreach (var player in _roster)
                 {
                     <tr>
-                        <td><MudImage Src="@player.HeadshotUrl" Height="20" /></td>
+                        <td><MudImage Src="@player.HeadshotUrl" Height="20"/></td>
                         <td>@player.Name</td>
                     </tr>
                 }
-            </tbody>
-        </MudSimpleTable>
+                </tbody>
+            </MudSimpleTable>
+        }
     }
 </MudStack>
 
@@ -74,6 +88,8 @@
     public required Data.CSHLDraft Draft { get; set; }
 
     private Guid? _draftId;
+
+    private bool _loading;
     
     private IEnumerable<Data.CSHLPlayer>? _roster;
     private Data.CSHLDraftPickDetail? _pick;
@@ -86,9 +102,15 @@
         if (_draftId is not null && Draft.Id == _draftId) return;
         
         _draftId = Draft.Id;
+
+        _loading = true;
+        await InvokeAsync(StateHasChanged);
         
         _draftTeams = await CSHLData.GetTeamsInDraftAsync(Draft.Id);
         await LoadDataAsync();
+        
+        _loading = false;
+        await InvokeAsync(StateHasChanged);
     }
     
     

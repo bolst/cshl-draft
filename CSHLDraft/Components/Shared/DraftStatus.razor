@@ -5,41 +5,47 @@
 
 @if (_teams is not null)
 {
-    
     <MudStack Class="py-4" AlignItems="AlignItems.Center" Spacing="2">
         <DraftPickTimer Draft="Draft" />
         
         <MudDivider />
      
-        @foreach (var team in _teams)
+        @if (_loading)
         {
-            if (_currentPick is not null && _currentPick.team_id == team.Id)
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="400px" Width="100%" />
+        }
+        else
+        {
+            foreach (var team in _teams)
             {
-                <MudPaper 
-                    Class="d-flex align-center border-double border-4" 
-                    Style="@($"border-color: {team.SecondaryHex}; box-shadow: inset 0 0 0 2000px {team.PrimaryHex}ff;")" 
-                    Height="50px" 
-                    Width="100%" 
-                    Square>
-                    <MudStack AlignItems="AlignItems.Center" Row>
-                        <MudImage Src="@team.LogoUrl" Height="40" />
-                        <MudText Typo="Typo.button" Style="@($"color: {team.SecondaryHex}")"><b>@team.Name</b></MudText>
-                    </MudStack>
-                </MudPaper>
-            }
-            else
-            {
-                <MudPaper 
-                    Class="d-flex align-center" 
-                    Style="@($"box-shadow: inset 0 0 0 2000px {team.PrimaryHex}66;")" 
-                    Height="50px" 
-                    Width="100%" 
-                    Square>
-                    <MudStack AlignItems="AlignItems.Center" Row>
-                        <MudImage Src="@team.LogoUrl" Height="40" />
-                        <MudText Typo="Typo.button" Style="@($"color: {team.SecondaryHex}")"><b>@team.Name</b></MudText>
-                    </MudStack>
-                </MudPaper>
+                if (_currentPick is not null && _currentPick.team_id == team.Id)
+                {
+                    <MudPaper 
+                        Class="d-flex align-center border-double border-4" 
+                        Style="@($"border-color: {team.SecondaryHex}; box-shadow: inset 0 0 0 2000px {team.PrimaryHex}ff;")" 
+                        Height="50px" 
+                        Width="100%" 
+                        Square>
+                        <MudStack AlignItems="AlignItems.Center" Row>
+                            <MudImage Src="@team.LogoUrl" Height="40" />
+                            <MudText Typo="Typo.button" Style="@($"color: {team.SecondaryHex}")"><b>@team.Name</b></MudText>
+                        </MudStack>
+                    </MudPaper>
+                }
+                else
+                {
+                    <MudPaper 
+                        Class="d-flex align-center" 
+                        Style="@($"box-shadow: inset 0 0 0 2000px {team.PrimaryHex}66;")" 
+                        Height="50px" 
+                        Width="100%" 
+                        Square>
+                        <MudStack AlignItems="AlignItems.Center" Row>
+                            <MudImage Src="@team.LogoUrl" Height="40" />
+                            <MudText Typo="Typo.button" Style="@($"color: {team.SecondaryHex}")"><b>@team.Name</b></MudText>
+                        </MudStack>
+                    </MudPaper>
+                }
             }
         }
         
@@ -55,6 +61,8 @@
     public required Data.CSHLDraft Draft { get; set; }
 
     private Guid? _draftId;
+
+    private bool _loading;
     
     private IEnumerable<Data.CSHLTeam>? _teams;
     private Data.CSHLDraftPickDetail? _currentPick;
@@ -65,9 +73,15 @@
         if (_draftId is not null && Draft.Id == _draftId) return;
 
         _draftId = Draft.Id;
+
+        _loading = true;
+        await InvokeAsync(StateHasChanged);
         
         _teams = await CSHLData.GetTeamsInDraftAsync(Draft.Id);
         await LoadDataAsync();
+        
+        _loading = false;
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task LoadDataAsync()

@@ -19,6 +19,10 @@ public class CSHLDraft
             return _gmAccountIds;
         }
     }
+    
+    public bool CanUserDraft(int accountId) => GmAccountIds.Contains(accountId) || creator_account_id == accountId;
+    
+    public bool CanUserModifyDraft(int accountId) => creator_account_id == accountId;
 
 
     public TimeSpan? TimeStart

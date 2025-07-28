@@ -16,6 +16,7 @@ public class CSHLAccount
     {
         IEnumerable<Claim> claims =
         [
+            new(ClaimTypes.PrimarySid, id.ToString()),
             new(ClaimTypes.Name, FullName),
             new(ClaimTypes.Email, Email)
         ];

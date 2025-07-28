@@ -5,12 +5,16 @@ public class CSHLPlayer : IEquatable<CSHLPlayer>
 {
     public Guid Id { get; set; }
     public string Name { get; set; }
-    public DateTime Birthday { get; set; }
+    public DateTime? Birthday { get; set; }
     public string Height { get; set; }
     public string Weight { get; set; }
     public string HeadshotUrl { get; set; }
     public string Position { get; set; }
     public Guid draft_id { get; set; }
+        
+    
+    public string? BirthYear => Birthday?.Year.ToString();
+        
     
     #region IEquatable
     
