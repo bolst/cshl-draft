@@ -1,0 +1,49 @@
+@namespace CSHLDraft.Components.Shared
+
+@inject Data.ICSHLData CSHLData
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Select User</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudAutocomplete @bind-Value="_selectedUser" SearchFunc="SearchFunc" Variant="Variant.Outlined" Label="User" ToStringFunc="@(x => x.FirstName + " " + x.LastName)" Margin="Margin.Dense" DebounceInterval="300" Dense Clearable />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Confirm" Color="Color.Success">Confirm</MudButton>
+        <MudButton OnClick="Cancel">Discard</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    private Data.CSHLAccount? _selectedUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var options = MudDialog.Options with
+        {
+            MaxWidth = MaxWidth.False,
+            BackdropClick = false,
+        };
+
+        await MudDialog.SetOptionsAsync(options);
+    }
+
+
+    private async Task<IEnumerable<Data.CSHLAccount>> SearchFunc(string query, CancellationToken token)
+    {
+        return await CSHLData.SearchAccountsAsync(query, token);
+    }
+
+
+    private void Confirm() => MudDialog.Close(DialogResult.Ok(_selectedUser));
+
+    private void Cancel() => MudDialog.Cancel();
+
+
+}

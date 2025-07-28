@@ -1,5 +1,9 @@
 @namespace CSHLDraft.Components.Shared
 
+@inherits HubComponentBase
+
+@inject Data.ICSHLData CSHLData
+
 <MudDialog>
     <TitleContent>
         <MudStack AlignItems="AlignItems.Center" Row>
@@ -21,8 +25,16 @@
         <MudButton
             Class="mud-theme-dark"
             Variant="Variant.Filled"
-            OnClick="OnDraftPlayer">
-            Draft
+            OnClick="OnDraftPlayer"
+            Disabled="_pick is not null">
+            @if (_pick is not null)
+            {
+                <MudText Typo="Typo.button">Already drafted</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.button">Draft</MudText>
+            }
         </MudButton>
     </DialogActions>
 </MudDialog>
@@ -34,9 +46,29 @@
     
     [Parameter, EditorRequired]
     public required Data.CSHLPlayer Player { get; set; }
+
+    private Data.CSHLPlayer? _player;
+    private Data.CSHLDraftPickDetail? _pick;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_player is not null && Player == _player) return;
+
+        _player = Player;
+        _pick = await CSHLData.GetPlayerDraftPickAsync(Player.draft_id, Player.Id);
+    }
     
     private void OnDraftPlayer() => MudDialog.Close(DialogResult.Ok(true));
 
     private void OnCancel() => MudDialog.Cancel();
+    
+    protected override void AddHubHandlers()
+    {
+        Hub.On(Hubs.DraftHub.Events.OnDraftUpdate, async () =>
+        {
+            _pick = await CSHLData.GetPlayerDraftPickAsync(Player.draft_id, Player.Id);
+            await InvokeAsync(StateHasChanged);
+        });
+    }
 
 }

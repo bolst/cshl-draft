@@ -30,6 +30,11 @@ else
                         
                     </div>
                     <MudButtonGroup OverrideStyles="false">
+                        @if (_currentUser is not null && draft.GmAccountIds.Contains(_currentUser.id))
+                        {
+                            <MudButton Href="@($"/draft/{draft.Id}")" Color="Color.Primary" Disabled="draft.State != Data.DraftState.Live">Draft Tool</MudButton>
+                        }
+                        
                         <MudButton Href="@($"/watch?draft={draft.Id}")" Color="Color.Info" Disabled="draft.State != Data.DraftState.Live">Watch</MudButton>
                         
                         @if (_currentUser is not null && _currentUser.id == draft.creator_account_id)

@@ -3,6 +3,8 @@
 @inject Data.ICSHLData CSHLData
 @inject IDialogService DialogService
 @inject Supabase.Client SBClient
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
 
 @if (_players is not null)
 {
@@ -17,6 +19,7 @@
         <ToolBarContent>
             <AuthorizeView Roles="admin">
                 <MudMenu
+                    Class="mr-1"
                     Label="Actions"
                     Variant="Variant.Filled"
                     EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
@@ -30,6 +33,10 @@
                     </MudMenuItem>
                 </MudMenu>
             </AuthorizeView>
+            
+            <MudTooltip Visible="_watchLinkTooltipVisible" Placement="Placement.Top" ShowOnHover="false" ShowOnClick="false" ShowOnFocus="false" Text="Copied!" Arrow>
+                <MudButton OnClick="CopyWatchLink" Color="Color.Info">Copy Watch Link</MudButton>
+            </MudTooltip>
             
             <MudSpacer/>
             <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Variant="Variant.Outlined"
@@ -80,12 +87,13 @@
 
     private bool _loading;
     private string _searchString = string.Empty;
+    private bool _watchLinkTooltipVisible;
     
     private Data.CSHLAccount? _currentUser;
     
     private bool UserCanPick => _currentPick is not null 
                                 && _currentUser is not null 
-                                && (_currentPick.gm_account_id is null || _currentPick.gm_account_id == _currentUser.id)
+                                && _currentPick.GmAccountId == _currentUser.id
                                 && !Disabled;
 
     protected override async Task OnParametersSetAsync()
@@ -156,6 +164,27 @@
 
             await Hub.SendAsync(nameof(Hubs.DraftHub.PushDraftUpdate));
             await LoadDataAsync();
+        }
+    }
+
+    private async Task CopyWatchLink()
+    {
+        if (_watchLinkTooltipVisible) return;
+
+        _watchLinkTooltipVisible = false;
+        var watchUrl = $"{Navigation.BaseUri}watch?draft={Draft.Id}";
+        
+        try
+        {
+            await JS.InvokeVoidAsync($"navigator.clipboard.writeText('{watchUrl}')");
+            
+            _watchLinkTooltipVisible = true;
+            await Task.Delay(2000);
+            _watchLinkTooltipVisible = false;
+        }
+        catch
+        {
+            await DialogService.ShowMessageBox("Error", (MarkupString)$"Unable to copy. Here's the link:<br/><br/><b><a href=\"{watchUrl}\" target=\"_blank\">{watchUrl}</a></b>");
         }
     }
 

@@ -10,6 +10,8 @@ public class CSHLTeam : IEquatable<CSHLTeam>
     public int Pick { get; set; }
     public string PrimaryHex { get; set; } = "#BC1B20";
     public string SecondaryHex { get; set; } = "#FFFFFF";
+    public int? GmAccountId { get; set; }
+    public string? GmName { get; set; }
 
     #region IEquatable
     

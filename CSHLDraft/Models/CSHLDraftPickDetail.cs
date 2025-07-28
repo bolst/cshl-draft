@@ -3,6 +3,7 @@ namespace CSHLDraft.Data;
 
 public class CSHLDraftPickDetail : CSHLDraftPick
 {
+    public int? GmAccountId { get; set; }
     public string? GmName { get; set; }
     public string TeamLogo { get; set; }
     public string TeamName { get; set; }

@@ -8,7 +8,7 @@
     {
         <MudButton OnClick="EndDraft" Color="Color.Error" FullWidth="FullWidth">End Draft</MudButton>
     }
-    else if (_draft.State == Data.DraftState.Inactive)
+    else if (_draft.State == Data.DraftState.Active)
     {
         <MudButton OnClick="BeginDraft" Color="Color.Info" FullWidth="FullWidth">Start Draft</MudButton>
     }
