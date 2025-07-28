@@ -24,7 +24,7 @@ else
                         <MudText Typo="Typo.body1"><b>@draft.Name.ToUpper()</b></MudText>
                         @if (draft.DTStart is not null)
                         {
-                            <MudText Typo="Typo.subtitle1">@draft.DTStart.Value.ToString("f")</MudText>
+                            <MudText Typo="Typo.subtitle1">@draft.DTStart.Value.ToString("ddd. MMM dd yyyy, hh:mm tt")</MudText>
                         }
                         <DraftStateChip DraftState="@draft.State" />
                         
