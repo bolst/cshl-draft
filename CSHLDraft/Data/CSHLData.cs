@@ -16,6 +16,7 @@ public interface ICSHLData
     Task<CSHLDraft?> CreateDraftAsync(CSHLDraft draft, int accountId);
     Task<CSHLDraft?> GetDraftByIdAsync(Guid draftId);
     Task UpdateDraftAsync(CSHLDraft draft);
+    Task DeleteDraftAsync(Guid draftId);
     
     
     
@@ -108,6 +109,18 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
                                         WHERE id = @Id", draft);
     }
 
+    public async Task DeleteDraftAsync(Guid draftId)
+    {
+        await ExecuteTransactionAsync(async () =>
+        {
+            var parameters = new { DraftId = draftId };
+            await ExecuteSqlAsync("DELETE FROM draft_pick WHERE draft_id = @DraftId", parameters);
+            await ExecuteSqlAsync("DELETE FROM player WHERE draft_id = @DraftId", parameters);
+            await ExecuteSqlAsync("DELETE FROM team WHERE draft_id = @DraftId", parameters);
+            await ExecuteSqlAsync(@"DELETE FROM draft WHERE id = @DraftId", parameters);
+        });
+    }
+    
     
     
     public async Task<IEnumerable<CSHLPlayer>> GetPlayersInDraftAsync(Guid draftId)

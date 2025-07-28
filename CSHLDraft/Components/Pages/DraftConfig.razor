@@ -22,7 +22,14 @@ else
     else
     {
         <PageTitle>@_draft.Name.ToUpper()</PageTitle>
-        <MudText Class="mt-2" Typo="Typo.h4">@_draft.Name.ToUpper()</MudText>
+        
+        <MudStack Class="my-2 mx-4" AlignItems="AlignItems.Center" Row>
+            <MudText Typo="Typo.h4">@_draft.Name.ToUpper()</MudText>
+            <MudSpacer />
+            <MudMenu Icon="@Icons.Material.Filled.MoreVert" AriaLabel="More">
+                <MudMenuItem Label="DELETE" Icon="@Icons.Material.Filled.DeleteForever" IconColor="Color.Error" OnClick="DeleteDraft" />
+            </MudMenu>
+        </MudStack>
         <MudDivider />
 
 
@@ -282,6 +289,16 @@ else
         await CSHLData.SetDraftPlayersAsync(DraftId, upload.Data);
 
         await LoadDataAsync();
+    }
+
+
+    private async Task DeleteDraft()
+    {
+        var confirm = await DialogService.ShowMessageBox("Confirm", "Delete this draft forever?", yesText: "Delete", noText: "Cancel");
+        if (!confirm.GetValueOrDefault()) return;
+
+        await CSHLData.DeleteDraftAsync(DraftId);
+        Navigation.NavigateTo("/");
     }
 
 }
