@@ -7,7 +7,7 @@
 <MudDialog>
     <TitleContent>
         <MudStack AlignItems="AlignItems.Center" Row>
-            <MudText Typo="Typo.h5">@Player.Name (@Player.Birthday.ToString("yyyy"))</MudText>
+            <MudText Typo="Typo.h5">@Player.Name (@Player.Birthday?.ToString("yyyy"))</MudText>
         </MudStack>
     </TitleContent>
     <DialogContent>

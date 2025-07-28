@@ -7,7 +7,7 @@
         <MudText Typo="Typo.h6">Select User</MudText>
     </TitleContent>
     <DialogContent>
-        <MudAutocomplete @bind-Value="_selectedUser" SearchFunc="SearchFunc" Variant="Variant.Outlined" Label="User" ToStringFunc="@(x => x.FirstName + " " + x.LastName)" Margin="Margin.Dense" DebounceInterval="300" Dense Clearable />
+        <MudAutocomplete @bind-Value="_selectedUser" SearchFunc="SearchFunc" Variant="Variant.Outlined" Label="User" Placeholder="Search for a user..." ToStringFunc="@(x => x.FirstName + " " + x.LastName)" Margin="Margin.Dense" DebounceInterval="300" Dense Clearable />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Confirm" Color="Color.Success">Confirm</MudButton>

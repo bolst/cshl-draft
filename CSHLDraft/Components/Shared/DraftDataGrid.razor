@@ -1,6 +1,8 @@
+@using System.Security.Claims
 @inherits HubComponentBase
 
 @inject Data.ICSHLData CSHLData
+@inject Data.CsvParser CsvParser
 @inject IDialogService DialogService
 @inject Supabase.Client SBClient
 @inject IJSRuntime JS
@@ -17,25 +19,34 @@
         FixedHeader
         Dense>
         <ToolBarContent>
-            <AuthorizeView Roles="admin">
-                <MudMenu
-                    Class="mr-1"
-                    Label="Actions"
-                    Variant="Variant.Filled"
-                    EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                    IconColor="Color.Error"
-                    Dense>
-                    <MudMenuItem >
-                        <DraftStateControl DraftId="Draft.Id" FullWidth />
-                    </MudMenuItem>
-                    <MudMenuItem>
-                        <MudButton Color="Color.Error" OnClick="OnResetDraft" FullWidth>Reset</MudButton>
-                    </MudMenuItem>
-                </MudMenu>
+            <AuthorizeView>
+                @if (context.User.IsInRole("admin") || Draft.creator_account_id.ToString() == context.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.PrimarySid)?.Value)
+                {
+                    <MudMenu
+                        Class="mr-1"
+                        Label="Actions"
+                        Variant="Variant.Filled"
+                        EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                        IconColor="Color.Error"
+                        Dense>
+                        <MudMenuItem >
+                            <DraftStateControl DraftId="Draft.Id" FullWidth/>
+                        </MudMenuItem>
+                        <MudMenuItem>
+                            <MudButton Color="Color.Error" OnClick="OnResetDraft" FullWidth>Reset</MudButton>
+                        </MudMenuItem>
+                    </MudMenu>
+                }
             </AuthorizeView>
             
             <MudTooltip Visible="_watchLinkTooltipVisible" Placement="Placement.Top" ShowOnHover="false" ShowOnClick="false" ShowOnFocus="false" Text="Copied!" Arrow>
-                <MudButton OnClick="CopyWatchLink" Color="Color.Info">Copy Watch Link</MudButton>
+                <MudButton OnClick="CopyWatchLink" Color="Color.Info" Variant="Variant.Filled">Copy Watch Link</MudButton>
+            </MudTooltip>
+                
+            <MudTooltip Text="Export Results" Placement="Placement.Top" Arrow>
+                <MudButtonGroup OverrideStyles="false">
+                    <MudIconButton Icon="@Icons.Material.Filled.CloudDownload" OnClick="ExportResults" />
+                </MudButtonGroup>
             </MudTooltip>
             
             <MudSpacer/>
@@ -46,7 +57,7 @@
         <Columns>
             <TemplateColumn>
                 <CellTemplate>
-                    <AuthorizeView Roles="captain,admin" Context="authContext">
+                    <AuthorizeView Context="authContext">
                         @{
                             var disabled = authContext.User.IsInRole("admin") ? Disabled : !UserCanPick;
                         }
@@ -59,7 +70,7 @@
                 </CellTemplate>
             </TemplateColumn>
             <PropertyColumn Property="x => x.Name" Title="Name" CellStyle="font-weight: bold" />
-            <PropertyColumn Property="@(x => x.Birthday.ToString("yyyy"))" Title="Birth year" />
+            <PropertyColumn Property="x => x.BirthYear" Title="Birth year" />
             <PropertyColumn Property="x => x.Height" Title="Ht" Sortable="false" />
             <PropertyColumn Property="x => x.Weight" Title="Wt" Sortable="false" />
         </Columns>
@@ -93,7 +104,7 @@
     
     private bool UserCanPick => _currentPick is not null 
                                 && _currentUser is not null 
-                                && _currentPick.GmAccountId == _currentUser.id
+                                && (_currentPick.GmAccountId == _currentUser.id || Draft.creator_account_id == _currentUser.id)
                                 && !Disabled;
 
     protected override async Task OnParametersSetAsync()
@@ -187,6 +198,23 @@
             await DialogService.ShowMessageBox("Error", (MarkupString)$"Unable to copy. Here's the link:<br/><br/><b><a href=\"{watchUrl}\" target=\"_blank\">{watchUrl}</a></b>");
         }
     }
+    
+
+    private async Task ExportResults()
+    {
+        var picks = await CSHLData.GetDraftPicksAsync(Draft.Id);
+        var data = picks.Select(x => new
+        {
+            Player = x.PlayerName,
+            Team = x.TeamName,
+            Round = x.Round,
+            RoundPick = x.RoundPick,
+            OverallPick = x.pick
+        });
+        
+        await CsvParser.ExportAsync(data, $"{Draft.Name}.csv");
+    }
+    
 
     private Func<Data.CSHLPlayer, bool> QuickFilter => x =>
     {

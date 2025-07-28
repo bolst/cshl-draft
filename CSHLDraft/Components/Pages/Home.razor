@@ -30,17 +30,21 @@ else
                         
                     </div>
                     <MudButtonGroup OverrideStyles="false">
-                        @if (_currentUser is not null && draft.GmAccountIds.Contains(_currentUser.id))
-                        {
-                            <MudButton Href="@($"/draft/{draft.Id}")" Color="Color.Primary" Disabled="draft.State != Data.DraftState.Live">Draft Tool</MudButton>
-                        }
+                        <AuthorizeView>
+                            @if (_currentUser is not null && draft.CanUserModifyDraft(_currentUser.id) || context.User.IsInRole("admin"))
+                            {
+                                <MudButton Href="@($"/draft/config?draft={draft.Id}")" Color="Color.Warning">Edit</MudButton>
+                            }
+                        </AuthorizeView>
+                        
+                        <AuthorizeView>
+                            @if (_currentUser is not null && draft.CanUserDraft(_currentUser.id) || context.User.IsInRole("admin"))
+                            {
+                                <MudButton Href="@($"/draft/{draft.Id}")" Color="Color.Primary" Disabled="draft.State != Data.DraftState.Live">Draft Tool</MudButton>
+                            }
+                        </AuthorizeView>
                         
                         <MudButton Href="@($"/watch?draft={draft.Id}")" Color="Color.Info" Disabled="draft.State != Data.DraftState.Live">Watch</MudButton>
-                        
-                        @if (_currentUser is not null && _currentUser.id == draft.creator_account_id)
-                        {
-                            <MudButton Href="@($"/draft/config?draft={draft.Id}")" Color="Color.Warning">Edit</MudButton>
-                        }
                     </MudButtonGroup>
                 </MudPaper>
             </div>
@@ -80,15 +84,7 @@ else
         if (!firstRender) return;
 
         var state = await CustomAuthenticationStateProvider.GetAuthenticationStateAsync();
-        if (state.User.Identity is null || !state.User.Identity.IsAuthenticated)
-        {
-            return;
-        }
-
-        var claim = state.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email);
-        if (claim is null) return;
-
-        _currentUser = await CSHLData.GetAccountByEmailAsync(claim.Value);
+        _currentUser = await CSHLData.GetAccountByEmailAsync(state.GetEmail());
         
         StateHasChanged();
     }

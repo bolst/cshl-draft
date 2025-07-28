@@ -25,6 +25,33 @@ public class CsvParser
     }
 
 
+    public async Task ExportAsync<T>(IEnumerable<T> records, string filename)
+    {
+        try
+        {
+            using var stream = new MemoryStream();
+
+            await using var writer = new StreamWriter(stream);
+            await using var csv = new CsvWriter(writer, _csvConfiguration);
+
+            await csv.WriteRecordsAsync(records);
+            await writer.FlushAsync();
+            
+            // something.SaveAs(stream)
+            var content = stream.ToArray();
+
+            // convert to b64
+            var base64Str = Convert.ToBase64String(content);
+
+            // download
+            await _jsRuntime.InvokeVoidAsync("downloadCsvFromStream", filename, base64Str);
+        }
+        catch (Exception e)
+        {
+            
+        }
+    }
+
     public async Task<FileUploadResult<T>> ParseCsvAsync<T>(IBrowserFile file)
     {
         var retval = new FileUploadResult<T> {  FileName = file.Name };

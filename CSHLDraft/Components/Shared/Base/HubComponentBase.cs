@@ -23,10 +23,21 @@ public abstract class HubComponentBase : ComponentBase, IAsyncDisposable
 
         if (!IsHubConnected)
         {
-            await Hub.StartAsync();
+            try
+            {
+                await Hub.StartAsync();
+            }
+            catch { }
         }
 
-        AddHubHandlers();
+        if (IsHubConnected)
+        {
+            try
+            {
+                AddHubHandlers();
+            }
+            catch { }
+        }
     }
     
     protected virtual void AddHubHandlers() { }

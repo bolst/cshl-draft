@@ -1,9 +1,11 @@
 @page "/watch"
 
+@using System.Security.Claims
 @inherits HubComponentBase
 
 @inject NavigationManager Navigation
 @inject Data.ICSHLData CSHLData
+@inject Data.CustomAuthenticationStateProvider CustomAuthenticationStateProvider
 
 <PageTitle>Bolton Cup Draft</PageTitle>
 
@@ -18,8 +20,11 @@
         {
             <MudText Typo="Typo.h5"><b>No picks have been made yet</b></MudText>
         }
-        <AuthorizeView Roles="captain,admin">
-            <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.FormatListNumbered" Href="@($"draft/{DraftId}")" Variant="Variant.Filled">Draft tool</MudButton>
+        <AuthorizeView>
+            @if (_currentUser is not null && _draft is not null && _draft.CanUserDraft(_currentUser.id) || context.User.IsInRole("admin"))
+            {
+                <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.FormatListNumbered" Href="@($"draft/{DraftId}")" Variant="Variant.Filled">Draft tool</MudButton>
+            }
         </AuthorizeView>
     </div>
 }
@@ -81,6 +86,8 @@
 
     private Guid DraftId;
 
+    private Data.CSHLAccount? _currentUser;
+    
     private bool _overlayVisible;
     private Data.CSHLDraftPickDetail? _lastPick;
     
@@ -103,6 +110,15 @@
 
         _draft = await CSHLData.GetDraftByIdAsync(DraftId);
         await LoadDataAsync();
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        var state = await CustomAuthenticationStateProvider.GetAuthenticationStateAsync();
+        _currentUser = await CSHLData.GetAccountByEmailAsync(state.GetEmail());
     }
             
     

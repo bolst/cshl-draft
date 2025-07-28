@@ -2,9 +2,11 @@
 
 @attribute [Authorize]
 
+@using System.Security.Claims
 @inherits HubComponentBase
 
 @inject Data.ICSHLData CSHLData
+@inject Data.CustomAuthenticationStateProvider CustomAuthenticationStateProvider
 @inject NavigationManager Navigation
 
 
@@ -49,10 +51,12 @@
 
     private Guid DraftId;
 
+    private bool _canRender;
+
     private bool _disabled;
     private Data.CSHLDraft? _draft;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         if (string.IsNullOrEmpty(DraftIdStr) || !Guid.TryParse(DraftIdStr, out DraftId))
         {
@@ -61,7 +65,23 @@
         }
 
         await LoadDataAsync();
-        await base.OnInitializedAsync();
+
+        _canRender = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_canRender) return;
+
+        _canRender = false;
+        
+        var state = await CustomAuthenticationStateProvider.GetAuthenticationStateAsync();
+        var currentUser = await CSHLData.GetAccountByEmailAsync(state.GetEmail());
+
+        if (currentUser is null || _draft is null || !_draft.CanUserDraft(currentUser.id) && !state.User.IsInRole("admin"))
+        {
+            Navigation.NavigateTo("/", true);
+        }
     }
 
 
