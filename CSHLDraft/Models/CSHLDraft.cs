@@ -19,6 +19,8 @@ public class CSHLDraft
             return _gmAccountIds;
         }
     }
+
+    public bool Editable => State != DraftState.Live && State != DraftState.Complete;
     
     public bool CanUserDraft(int accountId) => GmAccountIds.Contains(accountId) || creator_account_id == accountId;
     

@@ -14,8 +14,8 @@
 
 <MudGrid Spacing="2">
     <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert>
-        <MudItem xs="3">
-            <MudPaper Width="100%" Height="90vh" Class="mud-theme-surface" Elevation="3">
+        <MudItem Class="d-flex align-center" xs="3">
+            <MudPaper Width="100%" MaxHeight="90vh" Class="mud-theme-surface" Elevation="3">
                 @if (_draft is not null)
                 {
                     <DraftRosters Draft="_draft" />
@@ -23,8 +23,8 @@
             </MudPaper>
         </MudItem>
     </MudHidden>
-    <MudItem xs="12" md="7">
-        <MudPaper Width="100%" Height="90vh" Class="mud-theme-surface" Elevation="3">
+    <MudItem Class="d-flex align-center" xs="12" md="7">
+        <MudPaper Width="100%" MaxHeight="90vh" Class="mud-theme-surface" Elevation="0">
             @if (_draft is not null)
             {
                 <DraftDataGrid Draft="_draft" Disabled="_disabled" />
@@ -32,8 +32,8 @@
         </MudPaper>
     </MudItem>
     <MudHidden Breakpoint="Breakpoint.MdAndUp" Invert>
-        <MudItem xs="2">
-            <MudPaper Width="100%" Height="90vh" Class="mud-theme-surface" Elevation="3">
+        <MudItem Class="d-flex align-center" xs="2">
+            <MudPaper Width="100%" MaxHeight="90vh" Class="mud-theme-surface" Elevation="3">
                 @if (_draft is not null)
                 {
                     <DraftStatus Draft="_draft" />

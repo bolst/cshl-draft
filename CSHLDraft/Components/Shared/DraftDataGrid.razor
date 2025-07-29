@@ -10,50 +10,52 @@
 
 @if (_players is not null)
 {
+    <MudStack AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Row>
+        <AuthorizeView>
+            @if (context.User.IsInRole("admin") || Draft.creator_account_id.ToString() == context.GetId())
+            {
+                <MudMenu Class="mr-1"
+                         Label="Actions"
+                         Variant="Variant.Filled"
+                         EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                         IconColor="Color.Error"
+                         Dense>
+                    <MudMenuItem>
+                        <DraftStateControl DraftId="Draft.Id" FullWidth />
+                    </MudMenuItem>
+                    <MudMenuItem>
+                        <MudButton Color="Color.Info" Href="@($"draft/config?draft={Draft.Id}")" FullWidth>Config</MudButton>
+                    </MudMenuItem>
+                    <MudMenuItem>
+                        <MudButton Color="Color.Error" OnClick="OnResetDraft" FullWidth>Reset</MudButton>
+                    </MudMenuItem>
+                </MudMenu>
+            }
+        </AuthorizeView>
+
+        <MudTooltip Visible="_watchLinkTooltipVisible" Placement="Placement.Top" ShowOnHover="false" ShowOnClick="false" ShowOnFocus="false" Text="Copied!" Arrow>
+            <MudButton OnClick="CopyWatchLink" Color="Color.Info" Variant="Variant.Filled">Copy Watch Link</MudButton>
+        </MudTooltip>
+
+        <MudTooltip Text="Export Results" Placement="Placement.Top" Arrow>
+            <MudButtonGroup OverrideStyles="false">
+                <MudIconButton Icon="@Icons.Material.Filled.CloudDownload" OnClick="ExportResults" />
+            </MudButtonGroup>
+        </MudTooltip>
+
+        <MudSpacer />
+        <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Variant="Variant.Outlined"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Margin="Margin.Dense" Immediate />
+    </MudStack>
     <MudDataGrid
         T="Data.CSHLPlayer"
         Items="_filteredPlayers"
-        Height="calc(90vh - 4rem)"
+        Height="80vh"
         QuickFilter="QuickFilter"
         ShowColumnOptions="false"
+        Elevation="3"
         FixedHeader
         Dense>
-        <ToolBarContent>
-            <AuthorizeView>
-                @if (context.User.IsInRole("admin") || Draft.creator_account_id.ToString() == context.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.PrimarySid)?.Value)
-                {
-                    <MudMenu
-                        Class="mr-1"
-                        Label="Actions"
-                        Variant="Variant.Filled"
-                        EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                        IconColor="Color.Error"
-                        Dense>
-                        <MudMenuItem >
-                            <DraftStateControl DraftId="Draft.Id" FullWidth/>
-                        </MudMenuItem>
-                        <MudMenuItem>
-                            <MudButton Color="Color.Error" OnClick="OnResetDraft" FullWidth>Reset</MudButton>
-                        </MudMenuItem>
-                    </MudMenu>
-                }
-            </AuthorizeView>
-            
-            <MudTooltip Visible="_watchLinkTooltipVisible" Placement="Placement.Top" ShowOnHover="false" ShowOnClick="false" ShowOnFocus="false" Text="Copied!" Arrow>
-                <MudButton OnClick="CopyWatchLink" Color="Color.Info" Variant="Variant.Filled">Copy Watch Link</MudButton>
-            </MudTooltip>
-                
-            <MudTooltip Text="Export Results" Placement="Placement.Top" Arrow>
-                <MudButtonGroup OverrideStyles="false">
-                    <MudIconButton Icon="@Icons.Material.Filled.CloudDownload" OnClick="ExportResults" />
-                </MudButtonGroup>
-            </MudTooltip>
-            
-            <MudSpacer/>
-            <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Variant="Variant.Outlined"
-                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Margin="Margin.Dense" Immediate />
-        </ToolBarContent>
-
         <Columns>
             <TemplateColumn>
                 <CellTemplate>

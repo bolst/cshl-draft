@@ -40,7 +40,7 @@ else
                         <AuthorizeView>
                             @if (_currentUser is not null && draft.CanUserDraft(_currentUser.id) || context.User.IsInRole("admin"))
                             {
-                                <MudButton Href="@($"/draft/{draft.Id}")" Color="Color.Primary" Disabled="draft.State != Data.DraftState.Live">Draft Tool</MudButton>
+                                <MudButton Href="@($"/draft/{draft.Id}")" Color="Color.Primary">Draft Tool</MudButton>
                             }
                         </AuthorizeView>
                         

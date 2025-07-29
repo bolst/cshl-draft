@@ -14,7 +14,7 @@
 
 
 <div class="relative">
-    
+
     @if (_draft is null)
     {
         <PageTitle>Draft</PageTitle>
@@ -27,7 +27,7 @@
     else
     {
         <PageTitle>@_draft.Name.ToUpper()</PageTitle>
-        
+
         <MudStack Class="my-2 mx-4" AlignItems="AlignItems.Center" Row>
             <MudText Typo="Typo.h4">@_draft.Name.ToUpper()</MudText>
             <MudSpacer />
@@ -49,17 +49,17 @@
                                 </MudButton>
                             </ActivatorContent>
                         </MudFileUpload>
-                        
+
                         @* <MudTooltip Text="Example Format" Placement="Placement.Top" Arrow> *@
-                            <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Info" Href="/" Target="_blank" Size="Size.Small" Disabled />
+                        <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Info" Href="/" Target="_blank" Size="Size.Small" Disabled />
                         @* </MudTooltip> *@
-                        
+
                         <MudText Class="ml-2" Color="Color.Error">@_teamErrorMessage</MudText>
                     </ToolBarContent>
                     <Columns>
                         <TemplateColumn>
                             <CellTemplate>
-                                <ImageEditOverlay OnClick="_ => UploadTeamLogo(context.Item)">
+                                <ImageEditOverlay OnClick="_ => UploadTeamLogo(context.Item)" Disabled="Disabled">
                                     <MudImage Src="@context.Item.LogoUrl" FallbackSrc="@CSHLTheme.EmptyProfileUrl" Height="30"/>
                                 </ImageEditOverlay>
                             </CellTemplate>
@@ -75,7 +75,7 @@
                                 else
                                 {
                                     <MudTooltip Text="@context.Item.GmName" Placement="Placement.Top" Arrow>
-                                        <MudLink OnClick="_ => SelectGm(context.Item)">
+                                        <MudLink OnClick="_ => SelectGm(context.Item)" Disabled="Disabled">
                                             <MudAvatar Color="Color.Info" Size="Size.Small">@string.Join("", context.Item.GmName.Split(" ").Select(x => x.First()))</MudAvatar>
                                         </MudLink>
                                     </MudTooltip>
@@ -84,17 +84,17 @@
                         </TemplateColumn>
                         <TemplateColumn>
                             <CellTemplate>
-                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" Disabled="Disabled" />
                             </CellTemplate>
                         </TemplateColumn>
                         <TemplateColumn>
                             <CellTemplate>
-                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" OnClick="_ => RemoveTeam(context.Item)" />
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" OnClick="_ => RemoveTeam(context.Item)" Disabled="Disabled" />
                             </CellTemplate>
                         </TemplateColumn>
                     </Columns>
                     <PagerContent>
-                        <MudButton Class="mud-elevation-2" OnClick="AddTeam" StartIcon="@Icons.Material.Filled.Add" Disabled="_loading" FullWidth>Add Team</MudButton>
+                        <MudButton Class="mud-elevation-2" OnClick="AddTeam" StartIcon="@Icons.Material.Filled.Add" Disabled="Disabled"FullWidth>Add Team</MudButton>
                     </PagerContent>
                 </MudDataGrid>
             </MudItem>
@@ -103,7 +103,7 @@
                     <ToolBarContent>
                         <MudFileUpload T="IBrowserFile" FilesChanged="UploadPlayersFile" Accept="csv">
                             <ActivatorContent>
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload" Disabled="Disabled">
                                     Upload Players
                                 </MudButton>
                             </ActivatorContent>
@@ -112,13 +112,13 @@
                         <MudTooltip Text="Example Format" Placement="Placement.Top" Arrow>
                             <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Info" Href="https://ffcghkodqzdpgfmzrmci.supabase.co/storage/v1/object/public/upload-examples//player-csv.png" Target="_blank" Size="Size.Small" />
                         </MudTooltip>
-                        
+
                         <MudText Class="ml-2" Color="Color.Error">@_playerErrorMessage</MudText>
                     </ToolBarContent>
                     <Columns>
                         <TemplateColumn>
                             <CellTemplate>
-                                <ImageEditOverlay OnClick="_ => UploadPlayerHeadshot(context.Item)">
+                                <ImageEditOverlay OnClick="_ => UploadPlayerHeadshot(context.Item)" Disabled="Disabled">
                                     <MudImage Src="@context.Item.HeadshotUrl" Height="30"/>
                                 </ImageEditOverlay>
                             </CellTemplate>
@@ -129,39 +129,39 @@
                                 <MudText Typo="Typo.body2">@context.Item.Birthday?.ToString("d")</MudText>
                             </CellTemplate>
                             <EditTemplate>
-                                <MudDatePicker @bind-Date="context.Item.Birthday" Variant="Variant.Outlined" Label="Birthday" Margin="Margin.Dense" Editable Clearable />
+                                <MudDatePicker @bind-Date="context.Item.Birthday" Variant="Variant.Outlined" Label="Birthday" Margin="Margin.Dense" Disabled="Disabled" Editable Clearable />
                             </EditTemplate>
                         </PropertyColumn>
                         <PropertyColumn Property="x => x.Height" Title="Height" />
                         <PropertyColumn Property="x => x.Weight" Title="Weight" />
                         <TemplateColumn>
                             <CellTemplate>
-                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" />
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@context.Actions.StartEditingItemAsync" Disabled="Disabled" />
                             </CellTemplate>
                         </TemplateColumn>
                         <TemplateColumn>
                             <CellTemplate>
-                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" OnClick="_ => RemovePlayer(context.Item)" />
+                                <MudIconButton Size="Size.Small" Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" OnClick="_ => RemovePlayer(context.Item)" Disabled="Disabled" />
                             </CellTemplate>
                         </TemplateColumn>
                     </Columns>
                     <PagerContent>
-                        <MudButton Class="mud-elevation-2" OnClick="AddPlayer" StartIcon="@Icons.Material.Filled.Add" Disabled="_loading" FullWidth>Add Player</MudButton>
+                        <MudButton Class="mud-elevation-2" OnClick="AddPlayer" StartIcon="@Icons.Material.Filled.Add" Disabled="Disabled" FullWidth>Add Player</MudButton>
                     </PagerContent>
                 </MudDataGrid>
             </MudItem>
             <MudItem xs="12" lg="2">
                 <div class="d-flex align-start gap-3 flex-column pa-1">
-                    <MudSwitch T="bool" Label="Snake" Value="_draft.Snake" ValueChanged="OnSnakeChanged" Color="Color.Primary" Disabled="_loading" />
-                    <MudDatePicker Date="_draft.DTStart" DateChanged="OnDateChanged" Label="Date" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="_loading" Editable />
-                    <MudTimePicker Time="_draft.TimeStart" TimeChanged="OnTimeChanged" Label="Time" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="_loading" AmPm Editable />
+                    <MudSwitch T="bool" Label="Snake" Value="_draft.Snake" ValueChanged="OnSnakeChanged" Color="Color.Primary" Disabled="Disabled" />
+                    <MudDatePicker Date="_draft.DTStart" DateChanged="OnDateChanged" Label="Date" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="Disabled" Editable />
+                    <MudTimePicker Time="_draft.TimeStart" TimeChanged="OnTimeChanged" Label="Time" Variant="Variant.Outlined" Margin="Margin.Dense" Disabled="Disabled" AmPm Editable />
                     <MudButton Href="@($"draft/{DraftId}")" Color="Color.Info" Variant="Variant.Filled" FullWidth>Draft Tool</MudButton>
                 </div>
             </MudItem>
         </MudGrid>
     }
-    
-    
+
+
     <MudOverlay @bind-Visible="_loading" Absolute>
         <MudProgressCircular Indeterminate />
     </MudOverlay>
@@ -184,6 +184,8 @@
     private Data.CSHLDraft? _draft;
     private IEnumerable<Data.CSHLPlayer> _players = [];
     private IEnumerable<Data.CSHLTeam> _teams = [];
+
+    private bool Disabled => _draft is null || !_draft.Editable || _loading;
 
     protected override async Task OnParametersSetAsync()
     {
