@@ -5,7 +5,7 @@
 
 @if (_draft is not null)
 {
-    <PageTitle>@_draft.Name</PageTitle>
+    <PageTitle>Teams - @_draft.Name</PageTitle>
     
     <div class="d-flex align-center justify-center flex-wrap flex-column" style="width: 100%">
         <MudChipSet T="Data.CSHLTeam" SelectedValue="_selectedTeam" SelectedValueChanged="SelectedTeamChanged" SelectionMode="SelectionMode.ToggleSelection" Color="Color.Primary" Variant="Variant.Text" Size="Size.Large">
@@ -87,7 +87,7 @@
     private void SelectedTeamChanged(Data.CSHLTeam? value)
     {
         _selectedTeam = value;
-        _selectedPlayers = _selectedTeam is null ? [] : _draftPicks;//.Where(x => x.team_id == _selectedTeam.Id).OrderBy(x => x.PlayerName);
+        _selectedPlayers = _selectedTeam is null ? [] : _draftPicks.Where(x => x.team_id == _selectedTeam.Id).OrderBy(x => x.PlayerName);
     }
 
 }
