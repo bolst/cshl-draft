@@ -223,7 +223,7 @@ public class CSHLData(string connectionString) : DapperBase(connectionString), I
     
     public async Task<IEnumerable<CSHLDraftPickDetail>> GetDraftPicksAsync(Guid draftId)
     {
-        return await QueryDbAsync<CSHLDraftPickDetail>("select * from draftpickdetail where draft_id = @DraftId", new { DraftId = draftId });
+        return await QueryDbAsync<CSHLDraftPickDetail>("select * from draftpickdetail where draft_id = @DraftId order by pick", new { DraftId = draftId });
     }
     
     public async Task<CSHLDraftPickDetail?> GetCurrentPickAsync(Guid draftId)
