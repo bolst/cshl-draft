@@ -1,0 +1,93 @@
+@page "/teams/{DraftIdStr}"
+
+@inject Data.ICSHLData CSHLData
+@inject NavigationManager Navigation
+
+@if (_draft is not null)
+{
+    <PageTitle>@_draft.Name</PageTitle>
+    
+    <div class="d-flex align-center justify-center flex-wrap flex-column" style="width: 100%">
+        <MudChipSet T="Data.CSHLTeam" SelectedValue="_selectedTeam" SelectedValueChanged="SelectedTeamChanged" SelectionMode="SelectionMode.ToggleSelection" Color="Color.Primary" Variant="Variant.Text" Size="Size.Large">
+            @foreach (var team in _teams)
+            {
+                <MudChip Value="@team">
+                    <div class="d-flex align-center flex-row gap-2">
+                        <MudImage Src="@team.LogoUrl" Height="15" />
+                        @team.Name
+                    </div>
+                </MudChip>
+            }
+        </MudChipSet>
+    </div>
+    
+    @if (_selectedTeam is null)
+    {
+        <div class="d-flex align-center justify-center" style="width: 100%; height:  50vh">
+            <MudText Typo="Typo.h6">Select a team to see their players</MudText>
+        </div>
+    }
+    else
+    {
+        <div class="px-20 mx-20 mt-8">
+            <MudDataGrid Items="_selectedPlayers" Height="75vh" FixedHeader Striped>
+                <Columns>
+                    <PropertyColumn Property="x => x.PlayerName.ToUpper()" Title="Player"/>
+                </Columns>
+            </MudDataGrid>
+        </div>
+    }
+}
+
+
+@code {
+
+    
+    [Parameter]
+    public required string DraftIdStr { get; set; }
+
+    private Guid _draftId;
+
+    private Data.CSHLDraft? _draft;
+
+    private IEnumerable<Data.CSHLTeam> _teams = [];
+    private IEnumerable<Data.CSHLDraftPickDetail> _draftPicks = [];
+
+    private Data.CSHLTeam? _selectedTeam;
+    private IEnumerable<Data.CSHLDraftPickDetail> _selectedPlayers = [];
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Guid.TryParse(DraftIdStr, out _draftId))
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+        
+        if (_draft is not null && _draft.Id == _draftId) return;
+
+        await LoadDataAsync();
+    }
+
+
+    private async Task LoadDataAsync()
+    {
+        _draft = await CSHLData.GetDraftByIdAsync(_draftId);
+        if (_draft is null)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+        
+        _teams = await CSHLData.GetTeamsInDraftAsync(_draft.Id);
+        _draftPicks = await CSHLData.GetDraftPicksAsync(_draft.Id);
+    }
+
+
+    private void SelectedTeamChanged(Data.CSHLTeam? value)
+    {
+        _selectedTeam = value;
+        _selectedPlayers = _selectedTeam is null ? [] : _draftPicks;//.Where(x => x.team_id == _selectedTeam.Id).OrderBy(x => x.PlayerName);
+    }
+
+}

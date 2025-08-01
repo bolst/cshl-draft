@@ -1,13 +1,19 @@
 @page "/watch"
 
-@using System.Security.Claims
 @inherits HubComponentBase
 
 @inject NavigationManager Navigation
 @inject Data.ICSHLData CSHLData
 @inject Data.CustomAuthenticationStateProvider CustomAuthenticationStateProvider
 
-<PageTitle>Bolton Cup Draft</PageTitle>
+<PageTitle>@_draft?.Name</PageTitle>
+
+<div class="my-2" style="width: 100%">
+    @if (_draft is not null)
+    {
+        <MudButton Href="@($"/teams/{_draft.Id}")" Color="Color.Info" Size="Size.Large" StartIcon="@Icons.Material.Filled.PeopleAlt" FullWidth>TEAMS</MudButton>
+    }
+</div>
 
 @if (!DraftRoundGrouping.Any())
 {
